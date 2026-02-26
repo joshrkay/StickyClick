@@ -5,7 +5,7 @@
 (function () {
   "use strict";
 
-  var bar = document.getElementById("stickyclick-bar");
+  const bar = document.getElementById("stickyclick-bar");
   if (!bar) return;
 
   // Find the product form's submit button
