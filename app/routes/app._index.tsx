@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { useFetcher, useLoaderData } from "react-router";
 import {
@@ -10,6 +10,8 @@ import {
   BlockStack,
   Box,
   FormLayout,
+  Select,
+  TextField,
 } from "@shopify/polaris";
 import { TitleBar, useAppBridge } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
@@ -60,7 +62,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   });
 
   // Sync to App Metafield via GraphQL
-  const metafieldsSet = await admin.graphql(
+  const shopResponse = await admin.graphql(`#graphql { shop { id } }`);
+  const shopJson = await shopResponse.json();
+  const shopId = shopJson.data.shop.id;
+
+  await admin.graphql(
     `#graphql
       mutation MetafieldsSet($metafields: [MetafieldsSetInput!]!) {
         metafieldsSet(metafields: $metafields) {
@@ -89,7 +95,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
               buttonText,
               position
             }),
-            ownerId: (await admin.graphql(`#graphql { shop { id } }`).then(r => r.json())).data.shop.id
+            ownerId: shopId
           }
         ]
       }
@@ -106,13 +112,19 @@ export default function Index() {
 
   const isLoading = fetcher.state === "submitting" || fetcher.state === "loading";
 
+  const [enabled, setEnabled] = useState(settings.enabled ? "true" : "false");
+  const [buttonText, setButtonText] = useState(settings.buttonText);
+  const [primaryColor, setPrimaryColor] = useState(settings.primaryColor);
+  const [textColor, setTextColor] = useState(settings.textColor);
+  const [position, setPosition] = useState(settings.position);
+
   useEffect(() => {
     if (fetcher.data?.status === "success") {
       shopify.toast.show("Settings saved");
     }
   }, [fetcher.data, shopify]);
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
     const form = event.target as HTMLFormElement;
     fetcher.submit(form);
@@ -139,13 +151,15 @@ export default function Index() {
                         { label: "Enabled", value: "true" },
                         { label: "Disabled", value: "false" },
                       ]}
-                      defaultValue={settings.enabled ? "true" : "false"}
+                      value={enabled}
+                      onChange={setEnabled}
                     />
 
                     <TextField
                       label="Button Text"
                       name="buttonText"
-                      defaultValue={settings.buttonText}
+                      value={buttonText}
+                      onChange={setButtonText}
                       autoComplete="off"
                     />
 
@@ -153,16 +167,16 @@ export default function Index() {
                       <TextField
                         label="Primary Color (Hex)"
                         name="primaryColor"
-                        defaultValue={settings.primaryColor}
+                        value={primaryColor}
+                        onChange={setPrimaryColor}
                         autoComplete="off"
-                        prefix="#"
                       />
                       <TextField
                         label="Text Color (Hex)"
                         name="textColor"
-                        defaultValue={settings.textColor}
+                        value={textColor}
+                        onChange={setTextColor}
                         autoComplete="off"
-                        prefix="#"
                       />
                     </FormLayout.Group>
 
@@ -173,7 +187,8 @@ export default function Index() {
                         { label: "Bottom Right", value: "BOTTOM_RIGHT" },
                         { label: "Bottom Left", value: "BOTTOM_LEFT" },
                       ]}
-                      defaultValue={settings.position}
+                      value={position}
+                      onChange={setPosition}
                     />
 
                     <Box paddingBlockStart="400">
@@ -198,20 +213,30 @@ export default function Index() {
                   padding="400"
                   borderRadius="200"
                   minHeight="100px"
-                  style={{ display: 'flex', alignItems: 'flex-end', justifyContent: settings.position === 'BOTTOM_LEFT' ? 'flex-start' : 'flex-end' }}
                 >
-                  {/* Mock live preview based on current props (simplified for now to just show saved state, 
-                      real-time preview would need state management outside the form) 
-                  */}
-                  <div style={{
-                    backgroundColor: settings.primaryColor,
-                    color: settings.textColor,
-                    padding: '10px 20px',
-                    borderRadius: '4px',
-                    fontWeight: 'bold',
-                    boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-                  }}>
-                    {settings.buttonText}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "flex-end",
+                      justifyContent:
+                        position === "BOTTOM_LEFT"
+                          ? "flex-start"
+                          : "flex-end",
+                      minHeight: "100px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        backgroundColor: primaryColor,
+                        color: textColor,
+                        padding: "10px 20px",
+                        borderRadius: "4px",
+                        fontWeight: "bold",
+                        boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+                      }}
+                    >
+                      {buttonText}
+                    </div>
                   </div>
                 </Box>
                 <Text as="p" tone="subdued">
