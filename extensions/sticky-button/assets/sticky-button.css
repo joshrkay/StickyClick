@@ -1,0 +1,66 @@
+#sticky-click-container {
+  position: fixed;
+  z-index: 9999;
+  bottom: 20px;
+  padding: 0 20px;
+  width: auto;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+/* Position handling */
+#sticky-click-container[style*="BOTTOM_RIGHT"] {
+  right: 0;
+}
+#sticky-click-container[style*="BOTTOM_LEFT"] {
+  left: 0;
+}
+
+/* Hidden state (default) */
+.sticky-click-hidden {
+  transform: translateY(100px);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Visible state */
+.sticky-click-visible {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: all;
+}
+
+#sticky-click-btn {
+  background-color: var(--sticky-primary);
+  color: var(--sticky-text);
+  border: none;
+  padding: 12px 24px;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#sticky-click-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Mobile full width override if desired */
+@media (max-width: 480px) {
+  #sticky-click-container {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 10px;
+    background: white;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+  }
+  #sticky-click-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

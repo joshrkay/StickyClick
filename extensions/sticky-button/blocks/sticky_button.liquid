@@ -1,83 +1,39 @@
-{% assign settings = app.metafields.stickyclick.settings.value %}
-
-{% if settings.enabled %}
-  <div id="sticky-click-container" style="display: none; position: fixed; z-index: 9999; {{ settings.position | replace: '_', '-' | downcase }}: 20px;">
-    <button 
-      id="sticky-click-btn"
-      style="background-color: {{ settings.primaryColor }}; color: {{ settings.textColor }}; padding: 12px 24px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"
-    >
-      {{ settings.buttonText }}
-    </button>
-  </div>
-
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const container = document.getElementById('sticky-click-container');
-      const btn = document.getElementById('sticky-click-btn');
-      const mainForm = document.querySelector('form[action="/cart/add"]');
-      
-      // Simple show/hide logic (scroll depth)
-      window.addEventListener('scroll', () => {
-        if (window.scrollY > 300) {
-          container.style.display = 'block';
-        } else {
-          container.style.display = 'none';
-        }
-      });
-
-      // Add to cart logic
-      btn.addEventListener('click', async (e) => {
-        e.preventDefault();
-        
-        // Try to find the product ID from the main form
-        let variantId;
-        if (mainForm) {
-          const variantInput = mainForm.querySelector('[name="id"]');
-          if (variantInput) variantId = variantInput.value;
-        }
-
-        // If no main form (or complex theme), fallback or error?
-        // For MVP, we assume a standard product page with a form.
-        
-        if (!variantId) {
-          // Try URL param ?variant=...
-          const urlParams = new URLSearchParams(window.location.search);
-          variantId = urlParams.get('variant');
-        }
-        
-        // Fallback: use first available variant (from meta object if available, or just alert for MVP)
-        // Ideally we inject product.selected_or_first_available_variant.id via Liquid.
-        
-        {% if product.selected_or_first_available_variant.id %}
-          if (!variantId) variantId = "{{ product.selected_or_first_available_variant.id }}";
-        {% endif %}
-
-        if (variantId) {
-          btn.innerHTML = 'Adding...';
-          try {
-            await fetch('/cart/add.js', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ items: [{ id: variantId, quantity: 1 }] })
-            });
-            
-            // Success: redirect to cart or show drawer?
-            // Standard: reload or go to cart
-            window.location.href = '/cart';
-          } catch (err) {
-            console.error(err);
-            btn.innerHTML = 'Error';
-          }
-        }
-      });
-    });
-  </script>
-{% endif %}
-
 {% schema %}
 {
-  "name": "Sticky Add to Cart",
-  "target": "section",
+  "name": "Sticky Add To Cart",
+  "target": "body",
+  "stylesheet": "sticky-button.css",
+  "javascript": "sticky-button.js",
   "settings": []
 }
 {% endschema %}
+
+{%- assign settings = shop.metafields.stickyclick.settings.value -%}
+{%- if settings.enabled -%}
+  <div 
+    id="sticky-click-container" 
+    class="sticky-click-hidden"
+    style="
+      --sticky-primary: {{ settings.primaryColor | default: '#000000' }}; 
+      --sticky-text: {{ settings.textColor | default: '#FFFFFF' }};
+      --sticky-position: {{ settings.position | default: 'BOTTOM_RIGHT' }};
+    "
+  >
+    <div class="sticky-click-wrapper">
+      {%- if product.selected_or_first_available_variant.available -%}
+        <button 
+          id="sticky-click-btn"
+          type="button"
+          onclick="document.querySelector('form[action*=\'/cart/add\'] [type=\'submit\']').click()"
+        >
+          {{ settings.buttonText | default: 'Add to Cart' }}
+          <span class="sticky-price"> - {{ product.selected_or_first_available_variant.price | money }}</span>
+        </button>
+      {%- else -%}
+        <button id="sticky-click-btn" disabled>
+          Sold Out
+        </button>
+      {%- endif -%}
+    </div>
+  </div>
+{%- endif -%}
