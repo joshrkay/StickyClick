@@ -29,6 +29,25 @@
   pointer-events: all;
 }
 
+.sticky-click-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.sticky-upsell-row {
+  background: #fff;
+  color: #111;
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
 #sticky-click-btn {
   background-color: var(--sticky-primary);
   color: var(--sticky-text);

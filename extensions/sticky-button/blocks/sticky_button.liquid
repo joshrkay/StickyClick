@@ -10,22 +10,28 @@
 
 {%- assign settings = shop.metafields.stickyclick.settings.value -%}
 {%- if settings.enabled -%}
-  <div 
-    id="sticky-click-container" 
+  <div
+    id="sticky-click-container"
     class="sticky-click-hidden"
+    data-main-variant-id="{{ product.selected_or_first_available_variant.id }}"
+    data-upsell-enabled="{{ settings.upsellEnabled | default: false }}"
+    data-upsell-variant-id="{{ settings.upsellProductId | default: '' }}"
     style="
-      --sticky-primary: {{ settings.primaryColor | default: '#000000' }}; 
+      --sticky-primary: {{ settings.primaryColor | default: '#000000' }};
       --sticky-text: {{ settings.textColor | default: '#FFFFFF' }};
       --sticky-position: {{ settings.position | default: 'BOTTOM_RIGHT' }};
     "
   >
     <div class="sticky-click-wrapper">
       {%- if product.selected_or_first_available_variant.available -%}
-        <button 
-          id="sticky-click-btn"
-          type="button"
-          onclick="document.querySelector('form[action*=\'/cart/add\'] [type=\'submit\']').click()"
-        >
+        {%- if settings.upsellEnabled and settings.upsellProductId != blank -%}
+          <label class="sticky-upsell-row">
+            <input id="sticky-upsell-checkbox" type="checkbox" checked>
+            <span>Add recommended item</span>
+          </label>
+        {%- endif -%}
+
+        <button id="sticky-click-btn" type="button">
           {{ settings.buttonText | default: 'Add to Cart' }}
           <span class="sticky-price"> - {{ product.selected_or_first_available_variant.price | money }}</span>
         </button>

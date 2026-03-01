@@ -49,6 +49,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const textColor = formData.get("textColor") as string;
   const buttonText = formData.get("buttonText") as string;
   const position = formData.get("position") as string;
+  const upsellEnabled = formData.get("upsellEnabled") === "true";
+  const upsellProductId = (formData.get("upsellProductId") as string) || null;
 
   const settings = await prisma.shopSettings.update({
     where: { shop: session.shop },
@@ -58,6 +60,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       textColor,
       buttonText,
       position,
+      upsellEnabled,
+      upsellProductId,
     },
   });
 
@@ -93,7 +97,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
               primaryColor,
               textColor,
               buttonText,
-              position
+              position,
+              upsellEnabled,
+              upsellProductId
             }),
             ownerId: shopId
           }
@@ -117,6 +123,8 @@ export default function Index() {
   const [primaryColor, setPrimaryColor] = useState(settings.primaryColor);
   const [textColor, setTextColor] = useState(settings.textColor);
   const [position, setPosition] = useState(settings.position);
+  const [upsellEnabled, setUpsellEnabled] = useState(settings.upsellEnabled ? "true" : "false");
+  const [upsellProductId, setUpsellProductId] = useState(settings.upsellProductId || "");
 
   useEffect(() => {
     if (fetcher.data?.status === "success") {
@@ -191,6 +199,26 @@ export default function Index() {
                       onChange={setPosition}
                     />
 
+                    <Select
+                      label="Upsell"
+                      name="upsellEnabled"
+                      options={[
+                        { label: "Disabled", value: "false" },
+                        { label: "Enabled", value: "true" },
+                      ]}
+                      value={upsellEnabled}
+                      onChange={setUpsellEnabled}
+                    />
+
+                    <TextField
+                      label="Upsell Variant ID (Shopify GID or numeric variant id)"
+                      name="upsellProductId"
+                      value={upsellProductId}
+                      onChange={setUpsellProductId}
+                      autoComplete="off"
+                      helpText="Example: 1234567890"
+                    />
+
                     <Box paddingBlockStart="400">
                       <Button submit variant="primary" loading={isLoading}>
                         Save Settings
@@ -236,6 +264,7 @@ export default function Index() {
                       }}
                     >
                       {buttonText}
+                      {upsellEnabled === "true" && upsellProductId ? " + Upsell" : ""}
                     </div>
                   </div>
                 </Box>

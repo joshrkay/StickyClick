@@ -41,6 +41,8 @@ model ShopSettings {
   textColor    String   @default("#FFFFFF")
   buttonText   String   @default("Add to Cart")
   position     String   @default("BOTTOM_RIGHT") // Keeping as string for SQLite compatibility in MVP
+  upsellEnabled Boolean @default(false)
+  upsellProductId String? // Shopify GID
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
