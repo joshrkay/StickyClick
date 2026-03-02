@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const stickyButton = document.getElementById('sticky-click-btn');
   if (!stickyContainer || !stickyButton) return;
 
-  const mainVariantId = String(stickyContainer.dataset.mainVariantId || '').replace(/\D/g, '');
+  let mainVariantId = String(stickyContainer.dataset.mainVariantId || '').replace(/\D/g, '');
   const upsellEnabled = String(stickyContainer.dataset.upsellEnabled || '') === 'true';
   const upsellVariantId = String(stickyContainer.dataset.upsellVariantId || '').replace(/\D/g, '');
   const quickBuyEnabled = String(stickyContainer.dataset.quickBuyEnabled || '') === 'true';
@@ -12,10 +12,24 @@ document.addEventListener('DOMContentLoaded', () => {
   // Find the native Add to Cart form/button to watch
   const nativeForm = document.querySelector('form[action*="/cart/add"]');
   const nativeButton = nativeForm ? nativeForm.querySelector('[type="submit"]') : null;
+  const variantInput = nativeForm ? nativeForm.querySelector('input[name="id"], select[name="id"]') : null;
+
+  // Keep sticky variant in sync with selected product variant
+  if (variantInput) {
+    const syncVariant = () => {
+      const nextValue = String(variantInput.value || '').replace(/\D/g, '');
+      if (nextValue) {
+        mainVariantId = nextValue;
+      }
+    };
+
+    variantInput.addEventListener('change', syncVariant);
+    syncVariant();
+  }
 
   if (!nativeButton) {
     console.warn('StickyClick: Native Add to Cart button not found. Using scroll depth fallback.');
-    window.addEventListener('scroll', () => toggleSticky(window.scrollY > 300));
+    window.addEventListener('scroll', () => toggleSticky(window.scrollY > 300), { passive: true });
   } else {
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => toggleSticky(!entry.isIntersecting));

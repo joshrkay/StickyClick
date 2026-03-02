@@ -8,10 +8,10 @@
 }
 
 /* Position handling */
-#sticky-click-container[style*="BOTTOM_RIGHT"] {
+#sticky-click-container[data-position="BOTTOM_RIGHT"] {
   right: 0;
 }
-#sticky-click-container[style*="BOTTOM_LEFT"] {
+#sticky-click-container[data-position="BOTTOM_LEFT"] {
   left: 0;
 }
 
@@ -66,6 +66,18 @@
 #sticky-click-btn:disabled {
   opacity: 0.7;
   cursor: not-allowed;
+}
+
+#sticky-click-btn:focus-visible,
+.sticky-upsell-row input:focus-visible {
+  outline: 3px solid #1d4ed8;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #sticky-click-container {
+    transition: none;
+  }
 }
 
 /* Mobile full width override if desired */

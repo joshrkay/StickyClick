@@ -9,7 +9,7 @@
 {% endschema %}
 
 {%- assign settings = shop.metafields.stickyclick.settings.value -%}
-{%- if settings.enabled -%}
+{%- if settings.enabled and product -%}
   <div
     id="sticky-click-container"
     class="sticky-click-hidden"
@@ -17,17 +17,17 @@
     data-upsell-enabled="{{ settings.upsellEnabled | default: false }}"
     data-upsell-variant-id="{{ settings.upsellProductId | default: '' }}"
     data-quick-buy-enabled="{{ settings.quickBuyEnabled | default: false }}"
+    data-position="{{ settings.position | default: 'BOTTOM_RIGHT' }}"
     style="
       --sticky-primary: {{ settings.primaryColor | default: '#000000' }};
       --sticky-text: {{ settings.textColor | default: '#FFFFFF' }};
-      --sticky-position: {{ settings.position | default: 'BOTTOM_RIGHT' }};
     "
   >
     <div class="sticky-click-wrapper">
       {%- if product.selected_or_first_available_variant.available -%}
         {%- if settings.upsellEnabled and settings.upsellProductId != blank -%}
-          <label class="sticky-upsell-row">
-            <input id="sticky-upsell-checkbox" type="checkbox" checked>
+          <label class="sticky-upsell-row" for="sticky-upsell-checkbox">
+            <input id="sticky-upsell-checkbox" type="checkbox" checked aria-label="Add recommended item to cart">
             <span>Add recommended item</span>
           </label>
         {%- endif -%}

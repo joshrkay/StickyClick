@@ -1,0 +1,41 @@
+<svg width="1200" height="1200" viewBox="0 0 1200 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background: Vibrant Gradient to stand out in App Store -->
+  <rect width="1200" height="1200" rx="240" fill="url(#paint0_linear)"/>
+  
+  <!-- Shadow for depth -->
+  <circle cx="600" cy="640" r="300" fill="black" fill-opacity="0.2"/>
+
+  <!-- Main Element: The "Sticky" Shopping Bag -->
+  <!-- Bag Body -->
+  <path d="M400 450 H800 V850 C800 905.228 755.228 950 700 950 H500 C444.772 950 400 905.228 400 850 V450 Z" fill="white"/>
+  
+  <!-- Bag Handle -->
+  <path d="M500 450 V350 C500 294.772 544.772 250 600 250 C655.228 250 700 294.772 700 350 V450" stroke="white" stroke-width="80" stroke-linecap="round"/>
+
+  <!-- The "Click" / "Sticky" Accent: A Cursor integrated with a Pin -->
+  <g filter="url(#filter0_d)">
+    <!-- Cursor Arrow -->
+    <path d="M780 780 L650 900 L680 750 L550 700 L780 780 Z" fill="#FFD700" stroke="#E6C200" stroke-width="20" stroke-linejoin="round"/>
+  </g>
+
+  <!-- Speed lines to imply "Sticky/Fast" -->
+  <path d="M300 600 H350" stroke="white" stroke-width="40" stroke-linecap="round" stroke-opacity="0.6"/>
+  <path d="M250 700 H380" stroke="white" stroke-width="40" stroke-linecap="round" stroke-opacity="0.6"/>
+  <path d="M300 800 H350" stroke="white" stroke-width="40" stroke-linecap="round" stroke-opacity="0.6"/>
+
+  <defs>
+    <linearGradient id="paint0_linear" x1="0" y1="0" x2="1200" y2="1200" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4F46E5"/> <!-- Indigo-600 -->
+      <stop offset="1" stop-color="#9333EA"/> <!-- Purple-600 -->
+    </linearGradient>
+    <filter id="filter0_d" x="500" y="650" width="400" height="400" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"/>
+      <feOffset dy="20"/>
+      <feGaussianBlur stdDeviation="20"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"/>
+      <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow"/>
+      <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow" result="shape"/>
+    </filter>
+  </defs>
+</svg>
