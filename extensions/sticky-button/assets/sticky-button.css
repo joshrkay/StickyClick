@@ -36,6 +36,45 @@
   align-items: flex-end;
 }
 
+.sticky-click-meta {
+  background: #fff;
+  color: #111;
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sticky-qty-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff;
+  border-radius: 999px;
+  padding: 4px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+}
+
+.sticky-qty-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid #ddd;
+  background: #fff;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.sticky-qty-value {
+  min-width: 20px;
+  text-align: center;
+  font-weight: 600;
+}
+
 .sticky-upsell-row {
   background: #fff;
   color: #111;

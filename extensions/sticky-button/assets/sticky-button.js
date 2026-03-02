@@ -9,6 +9,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const quickBuyEnabled = String(stickyContainer.dataset.quickBuyEnabled || '') === 'true';
   const upsellCheckbox = document.getElementById('sticky-upsell-checkbox');
 
+  const qtyDecreaseBtn = document.getElementById('sticky-qty-decrease');
+  const qtyIncreaseBtn = document.getElementById('sticky-qty-increase');
+  const qtyValueEl = document.getElementById('sticky-qty-value');
+  const cartCountEl = document.getElementById('sticky-cart-count');
+  const cartSubtotalEl = document.getElementById('sticky-cart-subtotal');
+
+  let quantity = 1;
+
   // Find the native Add to Cart form/button to watch
   const nativeForm = document.querySelector('form[action*="/cart/add"]');
   const nativeButton = nativeForm ? nativeForm.querySelector('[type="submit"]') : null;
@@ -18,14 +26,20 @@ document.addEventListener('DOMContentLoaded', () => {
   if (variantInput) {
     const syncVariant = () => {
       const nextValue = String(variantInput.value || '').replace(/\D/g, '');
-      if (nextValue) {
-        mainVariantId = nextValue;
-      }
+      if (nextValue) mainVariantId = nextValue;
     };
 
     variantInput.addEventListener('change', syncVariant);
     syncVariant();
   }
+
+  const setQuantity = (nextQty) => {
+    quantity = Math.max(1, Math.min(99, Number(nextQty) || 1));
+    if (qtyValueEl) qtyValueEl.textContent = String(quantity);
+  };
+
+  qtyDecreaseBtn?.addEventListener('click', () => setQuantity(quantity - 1));
+  qtyIncreaseBtn?.addEventListener('click', () => setQuantity(quantity + 1));
 
   if (!nativeButton) {
     console.warn('StickyClick: Native Add to Cart button not found. Using scroll depth fallback.');
@@ -41,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
   stickyButton.addEventListener('click', async () => {
     if (!mainVariantId) return;
 
-    const items = [{ id: Number(mainVariantId), quantity: 1 }];
+    const items = [{ id: Number(mainVariantId), quantity }];
     if (upsellEnabled && upsellVariantId && (!upsellCheckbox || upsellCheckbox.checked)) {
       items.push({ id: Number(upsellVariantId), quantity: 1 });
     }
@@ -54,13 +68,71 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       if (!response.ok) throw new Error('Failed to add to cart');
-      window.location.href = quickBuyEnabled ? '/checkout' : '/cart';
+
+      await refreshCartSummary();
+
+      if (quickBuyEnabled) {
+        window.location.href = '/checkout';
+      } else if (!openCartDrawer()) {
+        window.location.href = '/cart';
+      }
     } catch (error) {
       console.error('StickyClick add-to-cart failed:', error);
-      // fallback to native button click
       nativeButton?.click();
     }
   });
+
+  function openCartDrawer() {
+    const drawerSelectors = [
+      'cart-drawer',
+      'cart-notification',
+      '[data-cart-drawer]',
+      '#CartDrawer',
+      '.cart-drawer'
+    ];
+
+    const drawer = drawerSelectors
+      .map((selector) => document.querySelector(selector))
+      .find(Boolean);
+
+    if (!drawer) {
+      document.dispatchEvent(new CustomEvent('cart:open'));
+      document.dispatchEvent(new CustomEvent('cart-drawer:open'));
+      return false;
+    }
+
+    drawer.classList.add('is-open', 'active');
+    drawer.setAttribute('open', 'true');
+    drawer.dispatchEvent(new CustomEvent('cart:open'));
+    return true;
+  }
+
+  async function refreshCartSummary() {
+    if (!cartCountEl || !cartSubtotalEl) return;
+
+    try {
+      const res = await fetch('/cart.js', { headers: { Accept: 'application/json' } });
+      if (!res.ok) return;
+      const cart = await res.json();
+
+      cartCountEl.textContent = `${cart.item_count || 0} item${cart.item_count === 1 ? '' : 's'}`;
+      cartSubtotalEl.textContent = formatMoney(cart.total_price || 0, cart.currency);
+    } catch (e) {
+      console.warn('StickyClick: unable to refresh cart summary', e);
+    }
+  }
+
+  function formatMoney(cents, currencyCode) {
+    const amount = Number(cents || 0) / 100;
+    try {
+      return new Intl.NumberFormat(undefined, {
+        style: 'currency',
+        currency: currencyCode || (window.Shopify && Shopify.currency && Shopify.currency.active) || 'USD',
+      }).format(amount);
+    } catch {
+      return `$${amount.toFixed(2)}`;
+    }
+  }
 
   function toggleSticky(show) {
     if (show) {
@@ -71,4 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
       stickyContainer.classList.remove('sticky-click-visible');
     }
   }
+
+  setQuantity(1);
+  refreshCartSummary();
 });

@@ -32,6 +32,17 @@
           </label>
         {%- endif -%}
 
+        <div class="sticky-click-meta" aria-live="polite">
+          <span id="sticky-cart-count">0 items</span>
+          <span id="sticky-cart-subtotal">$0.00</span>
+        </div>
+
+        <div class="sticky-qty-row" aria-label="Quantity selector">
+          <button id="sticky-qty-decrease" class="sticky-qty-btn" type="button" aria-label="Decrease quantity">−</button>
+          <span id="sticky-qty-value" class="sticky-qty-value">1</span>
+          <button id="sticky-qty-increase" class="sticky-qty-btn" type="button" aria-label="Increase quantity">+</button>
+        </div>
+
         <button id="sticky-click-btn" type="button">
           {{ settings.buttonText | default: 'Add to Cart' }}
           <span class="sticky-price"> - {{ product.selected_or_first_available_variant.price | money }}</span>
