@@ -16,6 +16,7 @@
     data-main-variant-id="{{ product.selected_or_first_available_variant.id }}"
     data-upsell-enabled="{{ settings.upsellEnabled | default: false }}"
     data-upsell-variant-id="{{ settings.upsellProductId | default: '' }}"
+    data-quick-buy-enabled="{{ settings.quickBuyEnabled | default: false }}"
     style="
       --sticky-primary: {{ settings.primaryColor | default: '#000000' }};
       --sticky-text: {{ settings.textColor | default: '#FFFFFF' }};
