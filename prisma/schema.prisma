@@ -43,6 +43,7 @@ model ShopSettings {
   position     String   @default("BOTTOM_RIGHT") // Keeping as string for SQLite compatibility in MVP
   upsellEnabled Boolean @default(false)
   upsellProductId String? // Shopify GID
+  quickBuyEnabled Boolean @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }

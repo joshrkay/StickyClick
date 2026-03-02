@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const mainVariantId = String(stickyContainer.dataset.mainVariantId || '').replace(/\D/g, '');
   const upsellEnabled = String(stickyContainer.dataset.upsellEnabled || '') === 'true';
   const upsellVariantId = String(stickyContainer.dataset.upsellVariantId || '').replace(/\D/g, '');
+  const quickBuyEnabled = String(stickyContainer.dataset.quickBuyEnabled || '') === 'true';
   const upsellCheckbox = document.getElementById('sticky-upsell-checkbox');
 
   // Find the native Add to Cart form/button to watch
@@ -39,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       if (!response.ok) throw new Error('Failed to add to cart');
-      window.location.href = '/cart';
+      window.location.href = quickBuyEnabled ? '/checkout' : '/cart';
     } catch (error) {
       console.error('StickyClick add-to-cart failed:', error);
       // fallback to native button click

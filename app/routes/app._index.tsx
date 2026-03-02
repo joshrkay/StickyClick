@@ -27,6 +27,7 @@ const SettingsSchema = z.object({
   position: z.enum(["BOTTOM_RIGHT", "BOTTOM_LEFT"]),
   upsellEnabled: z.string().transform((val) => val === "true"),
   upsellProductId: z.string().optional().nullable(),
+  quickBuyEnabled: z.string().transform((val) => val === "true"),
 });
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
@@ -86,6 +87,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         position: data.position,
         upsellEnabled: data.upsellEnabled,
         upsellProductId: data.upsellProductId,
+        quickBuyEnabled: data.quickBuyEnabled,
       },
     });
 
@@ -128,7 +130,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
                 buttonText: data.buttonText,
                 position: data.position,
                 upsellEnabled: data.upsellEnabled,
-                upsellProductId: data.upsellProductId
+                upsellProductId: data.upsellProductId,
+                quickBuyEnabled: data.quickBuyEnabled
               }),
               ownerId: shopId
             }
@@ -166,6 +169,7 @@ export default function Index() {
   const [position, setPosition] = useState(settings.position);
   const [upsellEnabled, setUpsellEnabled] = useState(settings.upsellEnabled ? "true" : "false");
   const [upsellProductId, setUpsellProductId] = useState(settings.upsellProductId || "");
+  const [quickBuyEnabled, setQuickBuyEnabled] = useState(settings.quickBuyEnabled ? "true" : "false");
 
   useEffect(() => {
     if (fetcher.data?.status === "success") {
@@ -258,6 +262,17 @@ export default function Index() {
                       onChange={setUpsellProductId}
                       autoComplete="off"
                       helpText="Example: 1234567890"
+                    />
+
+                    <Select
+                      label="Quick Buy (Skip Cart → Checkout)"
+                      name="quickBuyEnabled"
+                      options={[
+                        { label: "Disabled", value: "false" },
+                        { label: "Enabled", value: "true" },
+                      ]}
+                      value={quickBuyEnabled}
+                      onChange={setQuickBuyEnabled}
                     />
 
                     <Box paddingBlockStart="400">
