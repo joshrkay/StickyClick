@@ -12,104 +12,145 @@ import {
   FormLayout,
   Select,
   TextField,
+  Banner,
 } from "@shopify/polaris";
 import { TitleBar, useAppBridge } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
 import prisma from "../db.server";
+import { z } from "zod";
+
+const SettingsSchema = z.object({
+  enabled: z.string().transform((val) => val === "true"),
+  primaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Invalid hex color"),
+  textColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Invalid hex color"),
+  buttonText: z.string().min(1).max(50),
+  position: z.enum(["BOTTOM_RIGHT", "BOTTOM_LEFT"]),
+  upsellEnabled: z.string().transform((val) => val === "true"),
+  upsellProductId: z.string().optional().nullable(),
+});
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
   
-  let settings = await prisma.shopSettings.findUnique({
-    where: { shop: session.shop },
-  });
-
-  if (!settings) {
-    settings = await prisma.shopSettings.create({
-      data: {
-        shop: session.shop,
-        enabled: true,
-        primaryColor: "#000000",
-        textColor: "#FFFFFF",
-        buttonText: "Add to Cart",
-        position: "BOTTOM_RIGHT",
-      },
+  try {
+    let settings = await prisma.shopSettings.findUnique({
+      where: { shop: session.shop },
     });
-  }
 
-  return { settings };
+    if (!settings) {
+      settings = await prisma.shopSettings.create({
+        data: {
+          shop: session.shop,
+          enabled: true,
+          primaryColor: "#000000",
+          textColor: "#FFFFFF",
+          buttonText: "Add to Cart",
+          position: "BOTTOM_RIGHT",
+        },
+      });
+    }
+
+    return { settings, error: null };
+  } catch (error) {
+    console.error("Failed to load settings:", error);
+    throw new Response("Failed to load settings", { status: 500 });
+  }
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const { session, admin } = await authenticate.admin(request);
-  const formData = await request.formData();
+  
+  try {
+    const formData = await request.formData();
+    const rawData = Object.fromEntries(formData);
+    
+    const result = SettingsSchema.safeParse(rawData);
 
-  const enabled = formData.get("enabled") === "true";
-  const primaryColor = formData.get("primaryColor") as string;
-  const textColor = formData.get("textColor") as string;
-  const buttonText = formData.get("buttonText") as string;
-  const position = formData.get("position") as string;
-  const upsellEnabled = formData.get("upsellEnabled") === "true";
-  const upsellProductId = (formData.get("upsellProductId") as string) || null;
-
-  const settings = await prisma.shopSettings.update({
-    where: { shop: session.shop },
-    data: {
-      enabled,
-      primaryColor,
-      textColor,
-      buttonText,
-      position,
-      upsellEnabled,
-      upsellProductId,
-    },
-  });
-
-  // Sync to App Metafield via GraphQL
-  const shopResponse = await admin.graphql(`#graphql { shop { id } }`);
-  const shopJson = await shopResponse.json();
-  const shopId = shopJson.data.shop.id;
-
-  await admin.graphql(
-    `#graphql
-      mutation MetafieldsSet($metafields: [MetafieldsSetInput!]!) {
-        metafieldsSet(metafields: $metafields) {
-          metafields {
-            key
-            namespace
-            value
-          }
-          userErrors {
-            field
-            message
-          }
-        }
-      }`,
-    {
-      variables: {
-        metafields: [
-          {
-            namespace: "stickyclick",
-            key: "settings",
-            type: "json",
-            value: JSON.stringify({
-              enabled,
-              primaryColor,
-              textColor,
-              buttonText,
-              position,
-              upsellEnabled,
-              upsellProductId
-            }),
-            ownerId: shopId
-          }
-        ]
-      }
+    if (!result.success) {
+      return { 
+        status: "error", 
+        errors: result.error.flatten().fieldErrors,
+        settings: null 
+      };
     }
-  );
 
-  return { settings, status: "success" };
+    const data = result.data;
+
+    const settings = await prisma.shopSettings.update({
+      where: { shop: session.shop },
+      data: {
+        enabled: data.enabled,
+        primaryColor: data.primaryColor,
+        textColor: data.textColor,
+        buttonText: data.buttonText,
+        position: data.position,
+        upsellEnabled: data.upsellEnabled,
+        upsellProductId: data.upsellProductId,
+      },
+    });
+
+    // Sync to App Metafield via GraphQL
+    const shopResponse = await admin.graphql(`#graphql { shop { id } }`);
+    const shopJson = await shopResponse.json();
+    
+    if (!shopJson.data?.shop?.id) {
+        throw new Error("Failed to fetch shop ID for metafield sync");
+    }
+    
+    const shopId = shopJson.data.shop.id;
+
+    const metafieldResponse = await admin.graphql(
+      `#graphql
+        mutation MetafieldsSet($metafields: [MetafieldsSetInput!]!) {
+          metafieldsSet(metafields: $metafields) {
+            metafields {
+              key
+              namespace
+              value
+            }
+            userErrors {
+              field
+              message
+            }
+          }
+        }`,
+      {
+        variables: {
+          metafields: [
+            {
+              namespace: "stickyclick",
+              key: "settings",
+              type: "json",
+              value: JSON.stringify({
+                enabled: data.enabled,
+                primaryColor: data.primaryColor,
+                textColor: data.textColor,
+                buttonText: data.buttonText,
+                position: data.position,
+                upsellEnabled: data.upsellEnabled,
+                upsellProductId: data.upsellProductId
+              }),
+              ownerId: shopId
+            }
+          ]
+        }
+      }
+    );
+
+    const metafieldJson = await metafieldResponse.json();
+    if (metafieldJson.data?.metafieldsSet?.userErrors?.length > 0) {
+        console.error("Metafield sync errors:", metafieldJson.data.metafieldsSet.userErrors);
+        // We don't fail the request here since DB update succeeded, but we log it
+    }
+
+    return { settings, status: "success", errors: null };
+
+  } catch (error) {
+    console.error("Failed to save settings:", error);
+    return { status: "error", errors: { form: ["Failed to save settings. Please try again."] }, settings: null };
+  }
 };
+
 
 export default function Index() {
   const { settings } = useLoaderData<typeof loader>();
