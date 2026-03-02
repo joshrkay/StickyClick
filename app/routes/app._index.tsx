@@ -16,6 +16,7 @@ import {
 } from "@shopify/polaris";
 import { TitleBar, useAppBridge } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
+import { hasActiveSubscription } from "../billing.server";
 import prisma from "../db.server";
 import { z } from "zod";
 
@@ -32,7 +33,7 @@ const SettingsSchema = z.object({
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
-  
+
   try {
     let settings = await prisma.shopSettings.findUnique({
       where: { shop: session.shop },
@@ -51,7 +52,9 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       });
     }
 
-    return { settings, error: null };
+    const isPro = await hasActiveSubscription(request);
+
+    return { settings, hasActiveSubscription: isPro, error: null };
   } catch (error) {
     console.error("Failed to load settings:", error);
     throw new Response("Failed to load settings", { status: 500 });
@@ -60,22 +63,38 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const { session, admin } = await authenticate.admin(request);
-  
+
   try {
     const formData = await request.formData();
     const rawData = Object.fromEntries(formData);
-    
+
     const result = SettingsSchema.safeParse(rawData);
 
     if (!result.success) {
-      return { 
-        status: "error", 
+      return {
+        status: "error",
         errors: result.error.flatten().fieldErrors,
-        settings: null 
+        settings: null,
       };
     }
 
     const data = result.data;
+
+    // Block premium features (upsell, quickBuy) if no active subscription
+    if (data.upsellEnabled || data.quickBuyEnabled) {
+      const isPro = await hasActiveSubscription(request);
+      if (!isPro) {
+        return {
+          status: "error",
+          errors: {
+            form: [
+              "Upsell and Quick Buy are Pro features. Please upgrade to the Pro plan to enable them.",
+            ],
+          },
+          settings: null,
+        };
+      }
+    }
 
     const settings = await prisma.shopSettings.update({
       where: { shop: session.shop },
@@ -156,7 +175,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
 
 export default function Index() {
-  const { settings } = useLoaderData<typeof loader>();
+  const { settings, hasActiveSubscription: isPro } =
+    useLoaderData<typeof loader>();
   const fetcher = useFetcher<typeof action>();
   const shopify = useAppBridge();
 
@@ -244,6 +264,13 @@ export default function Index() {
                       onChange={setPosition}
                     />
 
+                    {!isPro && (
+                      <Banner tone="warning">
+                        Upsell and Quick Buy are Pro features.{" "}
+                        Upgrade to Pro ($4.99/mo) to unlock them.
+                      </Banner>
+                    )}
+
                     <Select
                       label="Upsell"
                       name="upsellEnabled"
@@ -253,6 +280,7 @@ export default function Index() {
                       ]}
                       value={upsellEnabled}
                       onChange={setUpsellEnabled}
+                      disabled={!isPro}
                     />
 
                     <TextField
@@ -262,6 +290,7 @@ export default function Index() {
                       onChange={setUpsellProductId}
                       autoComplete="off"
                       helpText="Example: 1234567890"
+                      disabled={!isPro}
                     />
 
                     <Select
@@ -273,6 +302,7 @@ export default function Index() {
                       ]}
                       value={quickBuyEnabled}
                       onChange={setQuickBuyEnabled}
+                      disabled={!isPro}
                     />
 
                     <Box paddingBlockStart="400">
