@@ -2,7 +2,7 @@
 
 client_id = "3240537008da20282319cdfdb9c4f2fa"
 name = "StickyClick"
-application_url = "https://example.com"
+application_url = "https://sticky-click.vercel.app"
 embedded = true
 
 [build]
@@ -25,7 +25,11 @@ api_version = "2026-04"
 scopes = "write_metaobject_definitions,write_metaobjects,write_products"
 
 [auth]
-redirect_urls = [ "https://example.com/api/auth" ]
+redirect_urls = [
+  "https://sticky-click.vercel.app/auth/callback",
+  "https://sticky-click.vercel.app/auth/shopify/callback",
+  "https://sticky-click.vercel.app/api/auth/callback"
+]
 
 [product.metafields.app.demo_info]
 type = "single_line_text_field"
