@@ -1,10 +1,3 @@
-import { json } from "@remix-run/node";
-import { useLoaderData } from "@remix-run/react";
-
-export const loader = async () => {
-  return json({});
-};
-
 export default function Support() {
   return (
     <div style={{ padding: "40px", maxWidth: "800px", margin: "0 auto", fontFamily: "system-ui, sans-serif" }}>
