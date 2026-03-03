@@ -7,6 +7,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const upsellEnabled = String(stickyContainer.dataset.upsellEnabled || '') === 'true';
   const upsellVariantId = String(stickyContainer.dataset.upsellVariantId || '').replace(/\D/g, '');
   const quickBuyEnabled = String(stickyContainer.dataset.quickBuyEnabled || '') === 'true';
+  const showCartSummary = String(stickyContainer.dataset.showCartSummary || '') !== 'false';
+  const enableQuantitySelector = String(stickyContainer.dataset.enableQuantitySelector || '') !== 'false';
+  const openCartDrawerEnabled = String(stickyContainer.dataset.openCartDrawer || '') !== 'false';
   const upsellCheckbox = document.getElementById('sticky-upsell-checkbox');
 
   const qtyDecreaseBtn = document.getElementById('sticky-qty-decrease');
@@ -38,8 +41,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (qtyValueEl) qtyValueEl.textContent = String(quantity);
   };
 
-  qtyDecreaseBtn?.addEventListener('click', () => setQuantity(quantity - 1));
-  qtyIncreaseBtn?.addEventListener('click', () => setQuantity(quantity + 1));
+  if (enableQuantitySelector) {
+    qtyDecreaseBtn?.addEventListener('click', () => setQuantity(quantity - 1));
+    qtyIncreaseBtn?.addEventListener('click', () => setQuantity(quantity + 1));
+  }
 
   if (!nativeButton) {
     console.warn('StickyClick: Native Add to Cart button not found. Using scroll depth fallback.');
@@ -55,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
   stickyButton.addEventListener('click', async () => {
     if (!mainVariantId) return;
 
-    const items = [{ id: Number(mainVariantId), quantity }];
+    const items = [{ id: Number(mainVariantId), quantity: enableQuantitySelector ? quantity : 1 }];
     if (upsellEnabled && upsellVariantId && (!upsellCheckbox || upsellCheckbox.checked)) {
       items.push({ id: Number(upsellVariantId), quantity: 1 });
     }
@@ -73,7 +78,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (quickBuyEnabled) {
         window.location.href = '/checkout';
-      } else if (!openCartDrawer()) {
+      } else if (openCartDrawerEnabled) {
+        if (!openCartDrawer()) window.location.href = '/cart';
+      } else {
         window.location.href = '/cart';
       }
     } catch (error) {
@@ -108,7 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function refreshCartSummary() {
-    if (!cartCountEl || !cartSubtotalEl) return;
+    if (!showCartSummary || !cartCountEl || !cartSubtotalEl) return;
 
     try {
       const res = await fetch('/cart.js', { headers: { Accept: 'application/json' } });
