@@ -96,13 +96,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     });
 
     const shopResponse = await admin.graphql(`#graphql { shop { id } }`);
-    const shopJson = await shopResponse.json();
+    const { data: shopData } = await shopResponse.json();
 
-    if (!shopJson.data?.shop?.id) {
+    if (!shopData?.shop?.id) {
       throw new Error("Failed to fetch shop ID for metafield sync");
     }
-
-    const shopId = shopJson.data.shop.id;
 
     const metafieldResponse = await admin.graphql(
       `#graphql
@@ -141,7 +139,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
                 showFreeShippingBar: data.showFreeShippingBar,
                 freeShippingGoal: data.freeShippingGoal,
               }),
-              ownerId: shopId,
+              ownerId: shopData.shop.id,
             },
           ],
         },
