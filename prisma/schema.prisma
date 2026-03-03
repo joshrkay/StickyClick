@@ -47,6 +47,8 @@ model ShopSettings {
   showCartSummary Boolean @default(true)
   enableQuantitySelector Boolean @default(true)
   openCartDrawer Boolean @default(true)
+  showFreeShippingBar Boolean @default(false)
+  freeShippingGoal Int @default(5000) // Default $50.00
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }

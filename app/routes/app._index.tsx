@@ -32,6 +32,8 @@ const SettingsSchema = z.object({
   showCartSummary: z.string().transform((val) => val === "true"),
   enableQuantitySelector: z.string().transform((val) => val === "true"),
   openCartDrawer: z.string().transform((val) => val === "true"),
+  showFreeShippingBar: z.string().transform((val) => val === "true"),
+  freeShippingGoal: z.string().transform((val) => parseInt(val, 10) || 5000),
 });
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
@@ -54,6 +56,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
           showCartSummary: true,
           enableQuantitySelector: true,
           openCartDrawer: true,
+          showFreeShippingBar: false,
+          freeShippingGoal: 5000,
         },
       });
     }
@@ -88,12 +92,12 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
     const tier = await getFeatureTier(request);
 
-    if (tier === "basic" && (data.upsellEnabled || data.quickBuyEnabled || data.showCartSummary)) {
+    if (tier === "basic" && (data.upsellEnabled || data.quickBuyEnabled || data.showCartSummary || data.showFreeShippingBar)) {
       return {
         status: "error",
         errors: {
           form: [
-            "Upsell, Quick Buy, and Cart Summary are Pro features. Upgrade to Pro or Premium.",
+            "Upsell, Quick Buy, Cart Summary, and Free Shipping Bar are Pro features.",
           ],
         },
         settings: null,
@@ -126,6 +130,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         showCartSummary: data.showCartSummary,
         enableQuantitySelector: data.enableQuantitySelector,
         openCartDrawer: data.openCartDrawer,
+        showFreeShippingBar: data.showFreeShippingBar,
+        freeShippingGoal: data.freeShippingGoal,
       },
     });
 
@@ -172,6 +178,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
                 showCartSummary: data.showCartSummary,
                 enableQuantitySelector: data.enableQuantitySelector,
                 openCartDrawer: data.openCartDrawer,
+                showFreeShippingBar: data.showFreeShippingBar,
+                freeShippingGoal: data.freeShippingGoal,
               }),
               ownerId: shopId,
             },
@@ -212,6 +220,8 @@ export default function Index() {
   const [showCartSummary, setShowCartSummary] = useState(settings.showCartSummary ? "true" : "false");
   const [enableQuantitySelector, setEnableQuantitySelector] = useState(settings.enableQuantitySelector ? "true" : "false");
   const [openCartDrawer, setOpenCartDrawer] = useState(settings.openCartDrawer ? "true" : "false");
+  const [showFreeShippingBar, setShowFreeShippingBar] = useState(settings.showFreeShippingBar ? "true" : "false");
+  const [freeShippingGoal, setFreeShippingGoal] = useState(String(settings.freeShippingGoal || 5000));
 
   useEffect(() => {
     if (fetcher.data?.status === "success") {
@@ -250,6 +260,10 @@ export default function Index() {
 
                     <Select label="Show Cart Summary" name="showCartSummary" options={[{ label: "Enabled", value: "true" }, { label: "Disabled", value: "false" }]} value={showCartSummary} onChange={setShowCartSummary} disabled={!isProOrHigher} />
 
+                    <Select label="Enable Free Shipping Bar" name="showFreeShippingBar" options={[{ label: "Enabled", value: "true" }, { label: "Disabled", value: "false" }]} value={showFreeShippingBar} onChange={setShowFreeShippingBar} disabled={!isProOrHigher} />
+
+                    <TextField label="Free Shipping Goal (cents)" name="freeShippingGoal" value={freeShippingGoal} onChange={setFreeShippingGoal} autoComplete="off" helpText="e.g. 5000 = $50.00" disabled={!isProOrHigher} />
+
                     <Select label="Enable Quantity Selector" name="enableQuantitySelector" options={[{ label: "Enabled", value: "true" }, { label: "Disabled", value: "false" }]} value={enableQuantitySelector} onChange={setEnableQuantitySelector} disabled={!isPremium} />
 
                     <Select label="Open Cart Drawer after add" name="openCartDrawer" options={[{ label: "Enabled", value: "true" }, { label: "Disabled", value: "false" }]} value={openCartDrawer} onChange={setOpenCartDrawer} helpText="When disabled, Add to Cart redirects to /cart (unless Quick Buy is enabled)." disabled={!isPremium} />
@@ -259,13 +273,13 @@ export default function Index() {
                         <Text as="h3" variant="headingSm">Feature Packaging</Text>
                         <Text as="p" tone="subdued">Current plan: {tier.toUpperCase()}</Text>
                         <Text as="p">Basic: Sticky button core (status, text, colors, position)</Text>
-                        <Text as="p">Pro: Upsell, Quick Buy, Cart Summary</Text>
+                        <Text as="p">Pro: Upsell, Quick Buy, Cart Summary, Free Shipping Bar</Text>
                         <Text as="p">Premium: Quantity Selector, Cart Drawer behavior controls</Text>
                       </BlockStack>
                     </Card>
 
                     {!isProOrHigher && (
-                      <Banner tone="warning">Pro unlocks Upsell, Quick Buy, and Cart Summary.</Banner>
+                      <Banner tone="warning">Pro unlocks Upsell, Quick Buy, Cart Summary, and Free Shipping Bar.</Banner>
                     )}
 
                     {!isPremium && (

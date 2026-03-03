@@ -18,6 +18,8 @@
     data-upsell-variant-id="{{ settings.upsellProductId | default: '' }}"
     data-quick-buy-enabled="{{ settings.quickBuyEnabled | default: false }}"
     data-show-cart-summary="{{ settings.showCartSummary | default: true }}"
+    data-show-free-shipping-bar="{{ settings.showFreeShippingBar | default: false }}"
+    data-free-shipping-goal="{{ settings.freeShippingGoal | default: 5000 }}"
     data-enable-quantity-selector="{{ settings.enableQuantitySelector | default: true }}"
     data-open-cart-drawer="{{ settings.openCartDrawer | default: true }}"
     data-position="{{ settings.position | default: 'BOTTOM_RIGHT' }}"
@@ -27,6 +29,15 @@
     "
   >
     <div class="sticky-click-wrapper">
+      {%- if settings.showFreeShippingBar -%}
+        <div id="sticky-shipping-bar-container" class="sticky-shipping-bar-hidden">
+          <p id="sticky-shipping-text">Free shipping over <span id="sticky-shipping-goal-text"></span></p>
+          <div class="sticky-shipping-progress-bg">
+            <div id="sticky-shipping-progress-fill" style="width: 0%;"></div>
+          </div>
+        </div>
+      {%- endif -%}
+
       {%- if product.selected_or_first_available_variant.available -%}
         {%- if settings.upsellEnabled and settings.upsellProductId != blank -%}
           <label class="sticky-upsell-row" for="sticky-upsell-checkbox">

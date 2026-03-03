@@ -10,13 +10,22 @@ document.addEventListener('DOMContentLoaded', () => {
   const showCartSummary = String(stickyContainer.dataset.showCartSummary || '') !== 'false';
   const enableQuantitySelector = String(stickyContainer.dataset.enableQuantitySelector || '') !== 'false';
   const openCartDrawerEnabled = String(stickyContainer.dataset.openCartDrawer || '') !== 'false';
-  const upsellCheckbox = document.getElementById('sticky-upsell-checkbox');
+  
+  const showFreeShippingBar = String(stickyContainer.dataset.showFreeShippingBar || '') === 'true';
+  const freeShippingGoal = Number(stickyContainer.dataset.freeShippingGoal) || 5000;
 
+  const upsellCheckbox = document.getElementById('sticky-upsell-checkbox');
   const qtyDecreaseBtn = document.getElementById('sticky-qty-decrease');
   const qtyIncreaseBtn = document.getElementById('sticky-qty-increase');
   const qtyValueEl = document.getElementById('sticky-qty-value');
   const cartCountEl = document.getElementById('sticky-cart-count');
   const cartSubtotalEl = document.getElementById('sticky-cart-subtotal');
+  
+  // Shipping bar elements
+  const shippingContainer = document.getElementById('sticky-shipping-bar-container');
+  const shippingText = document.getElementById('sticky-shipping-text');
+  const shippingProgress = document.getElementById('sticky-shipping-progress-fill');
+  const shippingGoalText = document.getElementById('sticky-shipping-goal-text');
 
   let quantity = 1;
 
@@ -115,15 +124,32 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function refreshCartSummary() {
-    if (!showCartSummary || !cartCountEl || !cartSubtotalEl) return;
+    if (!showCartSummary && !showFreeShippingBar) return;
 
     try {
       const res = await fetch('/cart.js', { headers: { Accept: 'application/json' } });
       if (!res.ok) return;
       const cart = await res.json();
 
-      cartCountEl.textContent = `${cart.item_count || 0} item${cart.item_count === 1 ? '' : 's'}`;
-      cartSubtotalEl.textContent = formatMoney(cart.total_price || 0, cart.currency);
+      if (showCartSummary && cartCountEl && cartSubtotalEl) {
+        cartCountEl.textContent = `${cart.item_count || 0} item${cart.item_count === 1 ? '' : 's'}`;
+        cartSubtotalEl.textContent = formatMoney(cart.total_price || 0, cart.currency);
+      }
+
+      if (showFreeShippingBar && shippingContainer && shippingText && shippingProgress) {
+        const total = cart.total_price || 0;
+        const remaining = freeShippingGoal - total;
+        const percent = Math.min(100, (total / freeShippingGoal) * 100);
+        
+        shippingContainer.style.display = 'block';
+        shippingProgress.style.width = `${percent}%`;
+        
+        if (remaining <= 0) {
+          shippingText.innerHTML = '<strong>You unlocked Free Shipping!</strong>';
+        } else {
+          shippingText.innerHTML = `Add <strong>${formatMoney(remaining, cart.currency)}</strong> for Free Shipping`;
+        }
+      }
     } catch (e) {
       console.warn('StickyClick: unable to refresh cart summary', e);
     }
@@ -152,5 +178,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   setQuantity(1);
+  
+  if (showFreeShippingBar && shippingGoalText) {
+    shippingGoalText.textContent = formatMoney(freeShippingGoal);
+  }
+  
   refreshCartSummary();
 });
