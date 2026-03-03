@@ -34,11 +34,38 @@ document.addEventListener('DOMContentLoaded', () => {
   const nativeButton = nativeForm ? nativeForm.querySelector('[type="submit"]') : null;
   const variantInput = nativeForm ? nativeForm.querySelector('input[name="id"], select[name="id"]') : null;
 
+  // Price display element
+  const priceEl = stickyContainer.querySelector('.sticky-price');
+
+  // Build variant-to-price map for price sync on variant change
+  let variantPriceMap = {};
+  try {
+    const productJsonEl = document.querySelector(
+      '[data-product-json], script[type="application/json"][data-product-id], script[type="application/json"][data-product]'
+    );
+    if (productJsonEl) {
+      const productData = JSON.parse(productJsonEl.textContent || '{}');
+      if (productData.variants) {
+        productData.variants.forEach(function (v) {
+          variantPriceMap[String(v.id)] = v.price;
+        });
+      }
+    }
+  } catch (e) {
+    // Product JSON not available; price won't update on variant change
+  }
+
   // Keep sticky variant in sync with selected product variant
   if (variantInput) {
     const syncVariant = () => {
       const nextValue = String(variantInput.value || '').replace(/\D/g, '');
-      if (nextValue) mainVariantId = nextValue;
+      if (nextValue) {
+        mainVariantId = nextValue;
+        // Update displayed price if variant data is available
+        if (priceEl && variantPriceMap[nextValue] !== undefined) {
+          priceEl.textContent = ' - ' + formatMoney(variantPriceMap[nextValue]);
+        }
+      }
     };
 
     variantInput.addEventListener('change', syncVariant);

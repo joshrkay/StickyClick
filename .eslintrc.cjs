@@ -76,6 +76,17 @@ module.exports = {
       ],
     },
 
+    // Test files
+    {
+      files: ["**/*.test.{ts,tsx,js}"],
+      env: {
+        node: true,
+      },
+      rules: {
+        "no-undef": "off",
+      },
+    },
+
     // Node
     {
       files: [
