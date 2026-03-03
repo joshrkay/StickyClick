@@ -18,23 +18,8 @@ import { TitleBar, useAppBridge } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
 import { getFeatureTier } from "../billing.server";
 import prisma from "../db.server";
-import { z } from "zod";
-
-const SettingsSchema = z.object({
-  enabled: z.string().transform((val) => val === "true"),
-  primaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Invalid hex color"),
-  textColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Invalid hex color"),
-  buttonText: z.string().min(1).max(50),
-  position: z.enum(["BOTTOM_RIGHT", "BOTTOM_LEFT"]),
-  upsellEnabled: z.string().transform((val) => val === "true"),
-  upsellProductId: z.string().optional().nullable(),
-  quickBuyEnabled: z.string().transform((val) => val === "true"),
-  showCartSummary: z.string().transform((val) => val === "true"),
-  enableQuantitySelector: z.string().transform((val) => val === "true"),
-  openCartDrawer: z.string().transform((val) => val === "true"),
-  showFreeShippingBar: z.string().transform((val) => val === "true"),
-  freeShippingGoal: z.string().transform((val) => parseInt(val, 10) || 5000),
-});
+import { SettingsSchema } from "../schemas/settings";
+import { sanitizeSettingsForTier } from "../utils/tier-gating";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
@@ -88,33 +73,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       };
     }
 
-    const data = result.data;
-
     const tier = await getFeatureTier(request);
-
-    if (tier === "basic" && (data.upsellEnabled || data.quickBuyEnabled || data.showCartSummary || data.showFreeShippingBar)) {
-      return {
-        status: "error",
-        errors: {
-          form: [
-            "Upsell, Quick Buy, Cart Summary, and Free Shipping Bar are Pro features.",
-          ],
-        },
-        settings: null,
-      };
-    }
-
-    if (tier !== "premium" && (data.enableQuantitySelector || data.openCartDrawer)) {
-      return {
-        status: "error",
-        errors: {
-          form: [
-            "Quantity selector and cart drawer control are Premium features.",
-          ],
-        },
-        settings: null,
-      };
-    }
+    const data = sanitizeSettingsForTier(tier, result.data);
 
     const settings = await prisma.shopSettings.update({
       where: { shop: session.shop },
@@ -136,13 +96,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     });
 
     const shopResponse = await admin.graphql(`#graphql { shop { id } }`);
-    const shopJson = await shopResponse.json();
+    const { data: shopData } = await shopResponse.json();
 
-    if (!shopJson.data?.shop?.id) {
+    if (!shopData?.shop?.id) {
       throw new Error("Failed to fetch shop ID for metafield sync");
     }
-
-    const shopId = shopJson.data.shop.id;
 
     const metafieldResponse = await admin.graphql(
       `#graphql
@@ -181,7 +139,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
                 showFreeShippingBar: data.showFreeShippingBar,
                 freeShippingGoal: data.freeShippingGoal,
               }),
-              ownerId: shopId,
+              ownerId: shopData.shop.id,
             },
           ],
         },
@@ -226,6 +184,10 @@ export default function Index() {
   useEffect(() => {
     if (fetcher.data?.status === "success") {
       shopify.toast.show("Settings saved");
+    }
+    if (fetcher.data?.status === "error") {
+      const msg = fetcher.data.errors?.form?.[0] || "Failed to save settings";
+      shopify.toast.show(msg, { isError: true });
     }
   }, [fetcher.data, shopify]);
 
