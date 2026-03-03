@@ -16,7 +16,7 @@ import {
 } from "@shopify/polaris";
 import { TitleBar, useAppBridge } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
-import { hasActiveSubscription } from "../billing.server";
+import { getFeatureTier } from "../billing.server";
 import prisma from "../db.server";
 import { z } from "zod";
 
@@ -58,9 +58,9 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       });
     }
 
-    const isPro = await hasActiveSubscription(request);
+    const tier = await getFeatureTier(request);
 
-    return { settings, hasActiveSubscription: isPro, error: null };
+    return { settings, tier, error: null };
   } catch (error) {
     console.error("Failed to load settings:", error);
     throw new Response("Failed to load settings", { status: 500 });
@@ -86,19 +86,30 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
     const data = result.data;
 
-    if (data.upsellEnabled || data.quickBuyEnabled) {
-      const isPro = await hasActiveSubscription(request);
-      if (!isPro) {
-        return {
-          status: "error",
-          errors: {
-            form: [
-              "Upsell and Quick Buy are Pro features. Please upgrade to the Pro plan to enable them.",
-            ],
-          },
-          settings: null,
-        };
-      }
+    const tier = await getFeatureTier(request);
+
+    if (tier === "basic" && (data.upsellEnabled || data.quickBuyEnabled || data.showCartSummary)) {
+      return {
+        status: "error",
+        errors: {
+          form: [
+            "Upsell, Quick Buy, and Cart Summary are Pro features. Upgrade to Pro or Premium.",
+          ],
+        },
+        settings: null,
+      };
+    }
+
+    if (tier !== "premium" && (data.enableQuantitySelector || data.openCartDrawer)) {
+      return {
+        status: "error",
+        errors: {
+          form: [
+            "Quantity selector and cart drawer control are Premium features.",
+          ],
+        },
+        settings: null,
+      };
     }
 
     const settings = await prisma.shopSettings.update({
@@ -182,11 +193,13 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 };
 
 export default function Index() {
-  const { settings, hasActiveSubscription: isPro } = useLoaderData<typeof loader>();
+  const { settings, tier } = useLoaderData<typeof loader>();
   const fetcher = useFetcher<typeof action>();
   const shopify = useAppBridge();
 
   const isLoading = fetcher.state === "submitting" || fetcher.state === "loading";
+  const isProOrHigher = tier === "pro" || tier === "premium";
+  const isPremium = tier === "premium";
 
   const [enabled, setEnabled] = useState(settings.enabled ? "true" : "false");
   const [buttonText, setButtonText] = useState(settings.buttonText);
@@ -235,17 +248,31 @@ export default function Index() {
 
                     <Select label="Position" name="position" options={[{ label: "Bottom Right", value: "BOTTOM_RIGHT" }, { label: "Bottom Left", value: "BOTTOM_LEFT" }]} value={position} onChange={setPosition} />
 
-                    <Select label="Show Cart Summary" name="showCartSummary" options={[{ label: "Enabled", value: "true" }, { label: "Disabled", value: "false" }]} value={showCartSummary} onChange={setShowCartSummary} />
+                    <Select label="Show Cart Summary" name="showCartSummary" options={[{ label: "Enabled", value: "true" }, { label: "Disabled", value: "false" }]} value={showCartSummary} onChange={setShowCartSummary} disabled={!isProOrHigher} />
 
-                    <Select label="Enable Quantity Selector" name="enableQuantitySelector" options={[{ label: "Enabled", value: "true" }, { label: "Disabled", value: "false" }]} value={enableQuantitySelector} onChange={setEnableQuantitySelector} />
+                    <Select label="Enable Quantity Selector" name="enableQuantitySelector" options={[{ label: "Enabled", value: "true" }, { label: "Disabled", value: "false" }]} value={enableQuantitySelector} onChange={setEnableQuantitySelector} disabled={!isPremium} />
 
-                    <Select label="Open Cart Drawer after add" name="openCartDrawer" options={[{ label: "Enabled", value: "true" }, { label: "Disabled", value: "false" }]} value={openCartDrawer} onChange={setOpenCartDrawer} helpText="When disabled, Add to Cart redirects to /cart (unless Quick Buy is enabled)." />
+                    <Select label="Open Cart Drawer after add" name="openCartDrawer" options={[{ label: "Enabled", value: "true" }, { label: "Disabled", value: "false" }]} value={openCartDrawer} onChange={setOpenCartDrawer} helpText="When disabled, Add to Cart redirects to /cart (unless Quick Buy is enabled)." disabled={!isPremium} />
 
-                    {!isPro && (
-                      <Banner tone="warning">Upsell and Quick Buy are Pro features. Upgrade to Pro ($4.99/mo) to unlock them.</Banner>
+                    <Card>
+                      <BlockStack gap="150">
+                        <Text as="h3" variant="headingSm">Feature Packaging</Text>
+                        <Text as="p" tone="subdued">Current plan: {tier.toUpperCase()}</Text>
+                        <Text as="p">Basic: Sticky button core (status, text, colors, position)</Text>
+                        <Text as="p">Pro: Upsell, Quick Buy, Cart Summary</Text>
+                        <Text as="p">Premium: Quantity Selector, Cart Drawer behavior controls</Text>
+                      </BlockStack>
+                    </Card>
+
+                    {!isProOrHigher && (
+                      <Banner tone="warning">Pro unlocks Upsell, Quick Buy, and Cart Summary.</Banner>
                     )}
 
-                    <Select label="Upsell" name="upsellEnabled" options={[{ label: "Disabled", value: "false" }, { label: "Enabled", value: "true" }]} value={upsellEnabled} onChange={setUpsellEnabled} disabled={!isPro} />
+                    {!isPremium && (
+                      <Banner tone="info">Premium unlocks Quantity Selector and Cart Drawer controls.</Banner>
+                    )}
+
+                    <Select label="Upsell" name="upsellEnabled" options={[{ label: "Disabled", value: "false" }, { label: "Enabled", value: "true" }]} value={upsellEnabled} onChange={setUpsellEnabled} disabled={!isProOrHigher} />
 
                     <TextField
                       label="Upsell Variant ID (Shopify GID or numeric variant id)"
@@ -254,10 +281,10 @@ export default function Index() {
                       onChange={setUpsellProductId}
                       autoComplete="off"
                       helpText="Example: 1234567890"
-                      disabled={!isPro}
+                      disabled={!isProOrHigher}
                     />
 
-                    <Select label="Quick Buy (Skip Cart → Checkout)" name="quickBuyEnabled" options={[{ label: "Disabled", value: "false" }, { label: "Enabled", value: "true" }]} value={quickBuyEnabled} onChange={setQuickBuyEnabled} disabled={!isPro} />
+                    <Select label="Quick Buy (Skip Cart → Checkout)" name="quickBuyEnabled" options={[{ label: "Disabled", value: "false" }, { label: "Enabled", value: "true" }]} value={quickBuyEnabled} onChange={setQuickBuyEnabled} disabled={!isProOrHigher} />
 
                     <Box paddingBlockStart="400">
                       <Button submit variant="primary" loading={isLoading}>Save Settings</Button>

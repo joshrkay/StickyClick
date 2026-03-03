@@ -10,6 +10,7 @@ import { PrismaSessionStorage } from "@shopify/shopify-app-session-storage-prism
 import prisma from "./db.server";
 
 export const PRO_PLAN = "Pro";
+export const PREMIUM_PLAN = "Premium";
 
 const shopify = shopifyApp({
   apiKey: process.env.SHOPIFY_API_KEY,
@@ -25,6 +26,15 @@ const shopify = shopifyApp({
       lineItems: [
         {
           amount: 4.99,
+          currencyCode: "USD",
+          interval: BillingInterval.Every30Days,
+        },
+      ],
+    },
+    [PREMIUM_PLAN]: {
+      lineItems: [
+        {
+          amount: 12.99,
           currencyCode: "USD",
           interval: BillingInterval.Every30Days,
         },
