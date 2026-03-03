@@ -24,36 +24,48 @@ import { sanitizeSettingsForTier } from "../utils/tier-gating";
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
 
+  const defaults = {
+    id: 0,
+    shop: session.shop,
+    enabled: true,
+    primaryColor: "#000000",
+    textColor: "#FFFFFF",
+    buttonText: "Add to Cart",
+    position: "BOTTOM_RIGHT",
+    upsellEnabled: false,
+    upsellProductId: null,
+    quickBuyEnabled: false,
+    showCartSummary: true,
+    enableQuantitySelector: true,
+    openCartDrawer: true,
+    showFreeShippingBar: false,
+    freeShippingGoal: 5000,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+
+  let settings;
   try {
-    let settings = await prisma.shopSettings.findUnique({
+    settings = await prisma.shopSettings.findUnique({
       where: { shop: session.shop },
     });
 
     if (!settings) {
-      settings = await prisma.shopSettings.create({
-        data: {
-          shop: session.shop,
-          enabled: true,
-          primaryColor: "#000000",
-          textColor: "#FFFFFF",
-          buttonText: "Add to Cart",
-          position: "BOTTOM_RIGHT",
-          showCartSummary: true,
-          enableQuantitySelector: true,
-          openCartDrawer: true,
-          showFreeShippingBar: false,
-          freeShippingGoal: 5000,
-        },
-      });
+      settings = await prisma.shopSettings.create({ data: defaults });
     }
-
-    const tier = await getFeatureTier(request);
-
-    return { settings, tier, error: null };
   } catch (error) {
-    console.error("Failed to load settings:", error);
-    throw new Response("Failed to load settings", { status: 500 });
+    console.error("Failed to load settings from database:", error);
+    settings = defaults;
   }
+
+  let tier: Awaited<ReturnType<typeof getFeatureTier>> = "basic";
+  try {
+    tier = await getFeatureTier(request);
+  } catch (error) {
+    console.error("Failed to check billing tier:", error);
+  }
+
+  return { settings, tier, error: null };
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
