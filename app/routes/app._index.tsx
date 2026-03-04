@@ -183,6 +183,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const metafieldJson = await metafieldResponse.json();
     if (metafieldJson.data?.metafieldsSet?.userErrors?.length > 0) {
       console.error("Metafield sync errors:", metafieldJson.data.metafieldsSet.userErrors);
+      return {
+        settings,
+        status: "error",
+        errors: { form: ["Settings saved to database but failed to sync to your storefront. Please try saving again."] },
+      };
     }
 
     return { settings, status: "success", errors: null };

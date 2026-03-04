@@ -12,9 +12,13 @@ import prisma from "./db.server";
 export const PRO_PLAN = "Pro";
 export const PREMIUM_PLAN = "Premium";
 
+if (!process.env.SHOPIFY_API_SECRET) {
+  throw new Error("SHOPIFY_API_SECRET environment variable is required");
+}
+
 const shopify = shopifyApp({
   apiKey: process.env.SHOPIFY_API_KEY,
-  apiSecretKey: process.env.SHOPIFY_API_SECRET || "",
+  apiSecretKey: process.env.SHOPIFY_API_SECRET,
   apiVersion: ApiVersion.January26,
   scopes: process.env.SCOPES?.split(","),
   appUrl: process.env.SHOPIFY_APP_URL || "",

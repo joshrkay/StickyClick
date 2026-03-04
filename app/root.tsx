@@ -51,7 +51,9 @@ export function ErrorBoundary() {
           </h1>
           <p>
             {isRouteErrorResponse(error)
-              ? error.data
+              ? typeof error.data === "string"
+                ? error.data
+                : "An unexpected error occurred."
               : "Please try refreshing the page."}
           </p>
         </div>
