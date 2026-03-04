@@ -16,6 +16,14 @@ const allEnabled: SettingsOutput = {
   enableQuantitySelector: true,
   openCartDrawer: true,
   freeShippingGoal: 5000,
+  countdownEnabled: true,
+  countdownEndTime: null,
+  countdownDuration: 900,
+  countdownText: "Hurry!",
+  trustBadgesEnabled: true,
+  trustBadgesList: "secure_checkout,money_back",
+  trustBadgesStyle: "icon_text",
+  analyticsEnabled: true,
 };
 
 describe("sanitizeSettingsForTier", () => {
@@ -26,12 +34,15 @@ describe("sanitizeSettingsForTier", () => {
       expect(result.quickBuyEnabled).toBe(false);
       expect(result.showCartSummary).toBe(false);
       expect(result.showFreeShippingBar).toBe(false);
+      expect(result.countdownEnabled).toBe(false);
+      expect(result.trustBadgesEnabled).toBe(false);
     });
 
     it("disables all Premium features", () => {
       const result = sanitizeSettingsForTier("basic", allEnabled);
       expect(result.enableQuantitySelector).toBe(false);
       expect(result.openCartDrawer).toBe(false);
+      expect(result.analyticsEnabled).toBe(false);
     });
 
     it("preserves core fields", () => {
@@ -52,12 +63,15 @@ describe("sanitizeSettingsForTier", () => {
       expect(result.quickBuyEnabled).toBe(true);
       expect(result.showCartSummary).toBe(true);
       expect(result.showFreeShippingBar).toBe(true);
+      expect(result.countdownEnabled).toBe(true);
+      expect(result.trustBadgesEnabled).toBe(true);
     });
 
     it("disables Premium features", () => {
       const result = sanitizeSettingsForTier("pro", allEnabled);
       expect(result.enableQuantitySelector).toBe(false);
       expect(result.openCartDrawer).toBe(false);
+      expect(result.analyticsEnabled).toBe(false);
     });
   });
 
@@ -70,6 +84,9 @@ describe("sanitizeSettingsForTier", () => {
       expect(result.showFreeShippingBar).toBe(true);
       expect(result.enableQuantitySelector).toBe(true);
       expect(result.openCartDrawer).toBe(true);
+      expect(result.countdownEnabled).toBe(true);
+      expect(result.trustBadgesEnabled).toBe(true);
+      expect(result.analyticsEnabled).toBe(true);
     });
   });
 
@@ -78,5 +95,7 @@ describe("sanitizeSettingsForTier", () => {
     sanitizeSettingsForTier("basic", input);
     expect(input.upsellEnabled).toBe(true);
     expect(input.enableQuantitySelector).toBe(true);
+    expect(input.countdownEnabled).toBe(true);
+    expect(input.analyticsEnabled).toBe(true);
   });
 });

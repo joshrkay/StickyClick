@@ -23,6 +23,15 @@
     data-enable-quantity-selector="{{ settings.enableQuantitySelector | default: true }}"
     data-open-cart-drawer="{{ settings.openCartDrawer | default: true }}"
     data-position="{{ settings.position | default: 'BOTTOM_RIGHT' }}"
+    data-countdown-enabled="{{ settings.countdownEnabled | default: false }}"
+    data-countdown-end-time="{{ settings.countdownEndTime | default: '' }}"
+    data-countdown-duration="{{ settings.countdownDuration | default: 0 }}"
+    data-countdown-text="{{ settings.countdownText | default: 'Offer ends in' | escape }}"
+    data-trust-badges-enabled="{{ settings.trustBadgesEnabled | default: false }}"
+    data-trust-badges-list="{{ settings.trustBadgesList | default: 'secure_checkout,money_back' }}"
+    data-trust-badges-style="{{ settings.trustBadgesStyle | default: 'icon_text' }}"
+    data-analytics-enabled="{{ settings.analyticsEnabled | default: false }}"
+    data-shop-domain="{{ shop.permanent_domain }}"
     style="
       --sticky-primary: {{ settings.primaryColor | default: '#000000' | remove: ';' | remove: '}' | remove: '{' | truncate: 7, '' }};
       --sticky-text: {{ settings.textColor | default: '#FFFFFF' | remove: ';' | remove: '}' | remove: '{' | truncate: 7, '' }};
@@ -35,6 +44,22 @@
           <div class="sticky-shipping-progress-bg">
             <div id="sticky-shipping-progress-fill" style="width: 0%;"></div>
           </div>
+        </div>
+      {%- endif -%}
+
+      {%- if settings.countdownEnabled -%}
+        <div id="sticky-countdown-container" class="sticky-countdown-hidden">
+          <span id="sticky-countdown-label">{{ settings.countdownText | default: 'Offer ends in' | escape }}</span>
+          <span id="sticky-countdown-time"></span>
+        </div>
+      {%- endif -%}
+
+      {%- if settings.trustBadgesEnabled -%}
+        <div id="sticky-trust-badges" class="sticky-trust-badges" data-style="{{ settings.trustBadgesStyle | default: 'icon_text' }}">
+          {%- assign badges = settings.trustBadgesList | default: 'secure_checkout,money_back' | split: ',' -%}
+          {%- for badge in badges -%}
+            <span class="sticky-trust-badge" data-badge="{{ badge }}"></span>
+          {%- endfor -%}
         </div>
       {%- endif -%}
 

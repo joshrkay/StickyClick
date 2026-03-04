@@ -12,4 +12,12 @@ export const DEFAULT_SETTINGS = {
   openCartDrawer: true,
   showFreeShippingBar: false,
   freeShippingGoal: 5000,
+  countdownEnabled: false,
+  countdownEndTime: null,
+  countdownDuration: 0,
+  countdownText: "Offer ends in",
+  trustBadgesEnabled: false,
+  trustBadgesList: "secure_checkout,money_back",
+  trustBadgesStyle: "icon_text",
+  analyticsEnabled: false,
 } as const;

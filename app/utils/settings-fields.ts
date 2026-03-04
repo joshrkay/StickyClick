@@ -14,6 +14,14 @@ const SETTINGS_FIELDS = [
   "openCartDrawer",
   "showFreeShippingBar",
   "freeShippingGoal",
+  "countdownEnabled",
+  "countdownEndTime",
+  "countdownDuration",
+  "countdownText",
+  "trustBadgesEnabled",
+  "trustBadgesList",
+  "trustBadgesStyle",
+  "analyticsEnabled",
 ] as const satisfies readonly (keyof SettingsOutput)[];
 
 export function pickSettings(obj: Record<string, unknown>): SettingsOutput {
