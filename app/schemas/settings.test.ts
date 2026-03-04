@@ -15,6 +15,14 @@ const validInput = {
   openCartDrawer: "false",
   showFreeShippingBar: "false",
   freeShippingGoal: "5000",
+  countdownEnabled: "false",
+  countdownEndTime: "",
+  countdownDuration: "0",
+  countdownText: "Offer ends in",
+  trustBadgesEnabled: "false",
+  trustBadgesList: "secure_checkout,money_back",
+  trustBadgesStyle: "icon_text" as const,
+  analyticsEnabled: "false",
 };
 
 describe("SettingsSchema", () => {
@@ -43,6 +51,9 @@ describe("SettingsSchema", () => {
         enableQuantitySelector: "true",
         openCartDrawer: "true",
         showFreeShippingBar: "true",
+        countdownEnabled: "true",
+        trustBadgesEnabled: "true",
+        analyticsEnabled: "true",
       });
       expect(result.upsellEnabled).toBe(true);
       expect(result.quickBuyEnabled).toBe(true);
@@ -50,6 +61,9 @@ describe("SettingsSchema", () => {
       expect(result.enableQuantitySelector).toBe(true);
       expect(result.openCartDrawer).toBe(true);
       expect(result.showFreeShippingBar).toBe(true);
+      expect(result.countdownEnabled).toBe(true);
+      expect(result.trustBadgesEnabled).toBe(true);
+      expect(result.analyticsEnabled).toBe(true);
     });
   });
 
@@ -136,6 +150,74 @@ describe("SettingsSchema", () => {
     it("accepts a string value", () => {
       const result = SettingsSchema.parse({ ...validInput, upsellProductId: "1234567890" });
       expect(result.upsellProductId).toBe("1234567890");
+    });
+  });
+
+  describe("countdownEndTime", () => {
+    it("transforms valid ISO date string", () => {
+      const result = SettingsSchema.parse({ ...validInput, countdownEndTime: "2026-03-15T23:59:00Z" });
+      expect(result.countdownEndTime).toBe("2026-03-15T23:59:00.000Z");
+    });
+
+    it("transforms empty string to null", () => {
+      const result = SettingsSchema.parse({ ...validInput, countdownEndTime: "" });
+      expect(result.countdownEndTime).toBeNull();
+    });
+
+    it("transforms invalid date to null", () => {
+      const result = SettingsSchema.parse({ ...validInput, countdownEndTime: "not-a-date" });
+      expect(result.countdownEndTime).toBeNull();
+    });
+  });
+
+  describe("countdownDuration", () => {
+    it("parses string as integer", () => {
+      const result = SettingsSchema.parse({ ...validInput, countdownDuration: "900" });
+      expect(result.countdownDuration).toBe(900);
+    });
+
+    it("clamps to max 86400", () => {
+      const result = SettingsSchema.parse({ ...validInput, countdownDuration: "100000" });
+      expect(result.countdownDuration).toBe(86400);
+    });
+
+    it("defaults to 0 on invalid input", () => {
+      const result = SettingsSchema.parse({ ...validInput, countdownDuration: "abc" });
+      expect(result.countdownDuration).toBe(0);
+    });
+  });
+
+  describe("trustBadgesList", () => {
+    it("accepts valid comma-separated badges", () => {
+      const result = SettingsSchema.parse({ ...validInput, trustBadgesList: "secure_checkout,free_returns,fast_shipping" });
+      expect(result.trustBadgesList).toBe("secure_checkout,free_returns,fast_shipping");
+    });
+
+    it("accepts a single badge", () => {
+      const result = SettingsSchema.parse({ ...validInput, trustBadgesList: "money_back" });
+      expect(result.trustBadgesList).toBe("money_back");
+    });
+
+    it("rejects invalid badge names", () => {
+      const result = SettingsSchema.safeParse({ ...validInput, trustBadgesList: "invalid_badge" });
+      expect(result.success).toBe(false);
+    });
+  });
+
+  describe("trustBadgesStyle", () => {
+    it("accepts icon_text", () => {
+      const result = SettingsSchema.parse({ ...validInput, trustBadgesStyle: "icon_text" });
+      expect(result.trustBadgesStyle).toBe("icon_text");
+    });
+
+    it("accepts icon_only", () => {
+      const result = SettingsSchema.parse({ ...validInput, trustBadgesStyle: "icon_only" });
+      expect(result.trustBadgesStyle).toBe("icon_only");
+    });
+
+    it("rejects invalid style", () => {
+      const result = SettingsSchema.safeParse({ ...validInput, trustBadgesStyle: "invalid" });
+      expect(result.success).toBe(false);
     });
   });
 });

@@ -10,9 +10,22 @@ document.addEventListener('DOMContentLoaded', () => {
   const showCartSummary = String(stickyContainer.dataset.showCartSummary || '') !== 'false';
   const enableQuantitySelector = String(stickyContainer.dataset.enableQuantitySelector || '') !== 'false';
   const openCartDrawerEnabled = String(stickyContainer.dataset.openCartDrawer || '') !== 'false';
-  
+
   const showFreeShippingBar = String(stickyContainer.dataset.showFreeShippingBar || '') === 'true';
   const freeShippingGoal = Number(stickyContainer.dataset.freeShippingGoal) || 5000;
+
+  // Countdown timer settings
+  const countdownEnabled = String(stickyContainer.dataset.countdownEnabled || '') === 'true';
+  const countdownEndTime = stickyContainer.dataset.countdownEndTime || '';
+  const countdownDuration = Number(stickyContainer.dataset.countdownDuration) || 0;
+
+  // Trust badges settings
+  const trustBadgesEnabled = String(stickyContainer.dataset.trustBadgesEnabled || '') === 'true';
+  const trustBadgesStyle = stickyContainer.dataset.trustBadgesStyle || 'icon_text';
+
+  // Analytics settings
+  const analyticsEnabled = String(stickyContainer.dataset.analyticsEnabled || '') === 'true';
+  const shopDomain = stickyContainer.dataset.shopDomain || (window.Shopify && Shopify.shop) || window.location.hostname;
 
   const upsellCheckbox = document.getElementById('sticky-upsell-checkbox');
   const qtyDecreaseBtn = document.getElementById('sticky-qty-decrease');
@@ -20,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const qtyValueEl = document.getElementById('sticky-qty-value');
   const cartCountEl = document.getElementById('sticky-cart-count');
   const cartSubtotalEl = document.getElementById('sticky-cart-subtotal');
-  
+
   // Shipping bar elements
   const shippingContainer = document.getElementById('sticky-shipping-bar-container');
   const shippingText = document.getElementById('sticky-shipping-text');
@@ -101,6 +114,8 @@ document.addEventListener('DOMContentLoaded', () => {
       items.push({ id: Number(upsellVariantId), quantity: 1 });
     }
 
+    trackEvent('click', mainVariantId, 0, 0);
+
     try {
       const response = await fetch('/cart/add.js', {
         method: 'POST',
@@ -109,6 +124,14 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       if (!response.ok) throw new Error('Failed to add to cart');
+
+      const price = variantPriceMap[mainVariantId] || 0;
+      const qty = enableQuantitySelector ? quantity : 1;
+      trackEvent('add_to_cart', mainVariantId, qty, price * qty);
+
+      if (upsellEnabled && upsellVariantId && (!upsellCheckbox || upsellCheckbox.checked)) {
+        trackEvent('add_to_cart', upsellVariantId, 1, variantPriceMap[upsellVariantId] || 0);
+      }
 
       await refreshCartSummary();
 
@@ -167,10 +190,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const total = cart.total_price || 0;
         const remaining = freeShippingGoal - total;
         const percent = Math.min(100, (total / freeShippingGoal) * 100);
-        
+
         shippingContainer.style.display = 'block';
         shippingProgress.style.width = `${percent}%`;
-        
+
         if (remaining <= 0) {
           shippingText.innerHTML = '<strong>You unlocked Free Shipping!</strong>';
         } else {
@@ -194,21 +217,106 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  let impressionTracked = false;
   function toggleSticky(show) {
     if (show) {
       stickyContainer.classList.remove('sticky-click-hidden');
       stickyContainer.classList.add('sticky-click-visible');
+      if (!impressionTracked) {
+        impressionTracked = true;
+        trackEvent('impression', mainVariantId, 0, 0);
+      }
     } else {
       stickyContainer.classList.add('sticky-click-hidden');
       stickyContainer.classList.remove('sticky-click-visible');
     }
   }
 
+  // Analytics event tracking (non-blocking)
+  function trackEvent(eventType, variantId, qty, priceInCents) {
+    if (!analyticsEnabled) return;
+    try {
+      const payload = JSON.stringify({
+        shop: shopDomain,
+        eventType: eventType,
+        variantId: variantId ? String(variantId) : null,
+        value: Number(priceInCents) || 0,
+      });
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon('/apps/stickyclick/api/events', new Blob([payload], { type: 'application/json' }));
+      }
+    } catch (e) { /* analytics should never block UX */ }
+  }
+
+  // Countdown timer
+  if (countdownEnabled) {
+    const countdownContainer = document.getElementById('sticky-countdown-container');
+    const countdownTimeEl = document.getElementById('sticky-countdown-time');
+
+    if (countdownContainer && countdownTimeEl) {
+      let targetTime;
+
+      if (countdownEndTime) {
+        targetTime = new Date(countdownEndTime).getTime();
+      } else if (countdownDuration > 0) {
+        const storageKey = 'stickyclick_countdown_start';
+        let start = Number(sessionStorage.getItem(storageKey));
+        if (!start || start <= 0) {
+          start = Date.now();
+          sessionStorage.setItem(storageKey, String(start));
+        }
+        targetTime = start + countdownDuration * 1000;
+      }
+
+      if (targetTime) {
+        countdownContainer.classList.remove('sticky-countdown-hidden');
+        const tick = () => {
+          const remaining = Math.max(0, targetTime - Date.now());
+          if (remaining <= 0) {
+            countdownTimeEl.textContent = '00:00:00';
+            return;
+          }
+          const h = String(Math.floor(remaining / 3600000)).padStart(2, '0');
+          const m = String(Math.floor((remaining % 3600000) / 60000)).padStart(2, '0');
+          const s = String(Math.floor((remaining % 60000) / 1000)).padStart(2, '0');
+          countdownTimeEl.textContent = h + ':' + m + ':' + s;
+          setTimeout(tick, 1000);
+        };
+        tick();
+      }
+    }
+  }
+
+  // Trust badges rendering
+  if (trustBadgesEnabled) {
+    const BADGE_META = {
+      secure_checkout: { icon: '\uD83D\uDD12', text: 'Secure Checkout' },
+      money_back: { icon: '\uD83D\uDCB0', text: 'Money-back Guarantee' },
+      free_returns: { icon: '\u21BA', text: 'Free Returns' },
+      fast_shipping: { icon: '\uD83D\uDE9A', text: 'Fast Shipping' },
+      satisfaction_guaranteed: { icon: '\u2705', text: '100% Satisfaction' },
+      ssl_encrypted: { icon: '\uD83D\uDD10', text: 'SSL Encrypted' },
+    };
+
+    document.querySelectorAll('.sticky-trust-badge').forEach((el) => {
+      const key = el.dataset.badge;
+      const meta = BADGE_META[key];
+      if (!meta) return;
+      if (trustBadgesStyle === 'icon_only') {
+        el.textContent = meta.icon;
+      } else if (trustBadgesStyle === 'text_only') {
+        el.textContent = meta.text;
+      } else {
+        el.textContent = meta.icon + ' ' + meta.text;
+      }
+    });
+  }
+
   setQuantity(1);
-  
+
   if (showFreeShippingBar && shippingGoalText) {
     shippingGoalText.textContent = formatMoney(freeShippingGoal);
   }
-  
+
   refreshCartSummary();
 });

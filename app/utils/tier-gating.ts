@@ -17,11 +17,14 @@ export function sanitizeSettingsForTier(
     sanitized.quickBuyEnabled = false;
     sanitized.showCartSummary = false;
     sanitized.showFreeShippingBar = false;
+    sanitized.countdownEnabled = false;
+    sanitized.trustBadgesEnabled = false;
   }
 
   if (tier !== "premium") {
     sanitized.enableQuantitySelector = false;
     sanitized.openCartDrawer = false;
+    sanitized.analyticsEnabled = false;
   }
 
   return sanitized;

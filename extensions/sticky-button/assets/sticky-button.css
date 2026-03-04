@@ -121,6 +121,52 @@
   gap: 6px;
 }
 
+/* Countdown timer */
+.sticky-countdown-hidden {
+  display: none;
+}
+
+#sticky-countdown-container {
+  background: #fff;
+  color: #111;
+  font-size: 13px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+#sticky-countdown-time {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.5px;
+  color: #e11d48;
+  font-weight: 700;
+}
+
+/* Trust badges */
+.sticky-trust-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+}
+
+.sticky-trust-badge {
+  background: #fff;
+  color: #555;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
 #sticky-click-btn {
   background-color: var(--sticky-primary);
   color: var(--sticky-text);

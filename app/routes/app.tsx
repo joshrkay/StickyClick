@@ -28,6 +28,7 @@ export default function App() {
       <PolarisAppProvider i18n={translations}>
         <s-app-nav>
           <s-link href="/app">Settings</s-link>
+          <s-link href="/app/analytics">Analytics</s-link>
         </s-app-nav>
         <Outlet />
       </PolarisAppProvider>
