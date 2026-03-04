@@ -6,12 +6,17 @@ import { AppProvider as PolarisAppProvider } from "@shopify/polaris";
 import translations from "@shopify/polaris/locales/en.json";
 import "@shopify/polaris/build/esm/styles.css";
 
-import { authenticate } from "../shopify.server";
+import { authenticate, login } from "../shopify.server";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  await authenticate.admin(request);
-
-  // eslint-disable-next-line no-undef
+  try {
+    await authenticate.admin(request);
+  } catch (error) {
+    if (error instanceof Response && [401, 403, 409, 410].includes(error.status)) {
+      return login(request);
+    }
+    throw error;
+  }
   return { apiKey: process.env.SHOPIFY_API_KEY || "" };
 };
 
