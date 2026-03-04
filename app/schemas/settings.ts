@@ -23,5 +23,4 @@ export const SettingsSchema = z.object({
   freeShippingGoal: z.string().transform((val) => parseInt(val, 10) || 5000),
 });
 
-export type SettingsInput = z.input<typeof SettingsSchema>;
 export type SettingsOutput = z.output<typeof SettingsSchema>;

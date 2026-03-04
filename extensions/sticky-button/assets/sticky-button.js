@@ -1,3 +1,4 @@
+/* global Shopify */
 document.addEventListener('DOMContentLoaded', () => {
   const stickyContainer = document.getElementById('sticky-click-container');
   const stickyButton = document.getElementById('sticky-click-btn');

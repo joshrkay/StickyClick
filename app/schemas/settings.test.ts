@@ -128,7 +128,9 @@ describe("SettingsSchema", () => {
     });
 
     it("accepts undefined (optional)", () => {
-      const { upsellProductId: _, ...withoutUpsell } = validInput;
+      const withoutUpsell = Object.fromEntries(
+        Object.entries(validInput).filter(([key]) => key !== "upsellProductId"),
+      );
       const result = SettingsSchema.parse(withoutUpsell);
       expect(result.upsellProductId).toBeUndefined();
     });
