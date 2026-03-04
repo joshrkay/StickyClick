@@ -7,7 +7,14 @@ export const SettingsSchema = z.object({
   buttonText: z.string().min(1).max(50),
   position: z.enum(["BOTTOM_RIGHT", "BOTTOM_LEFT"]),
   upsellEnabled: z.string().transform((val) => val === "true"),
-  upsellProductId: z.string().optional().nullable(),
+  upsellProductId: z
+    .string()
+    .regex(
+      /^(\d+|gid:\/\/shopify\/ProductVariant\/\d+)?$/,
+      "Invalid variant ID",
+    )
+    .optional()
+    .nullable(),
   quickBuyEnabled: z.string().transform((val) => val === "true"),
   showCartSummary: z.string().transform((val) => val === "true"),
   enableQuantitySelector: z.string().transform((val) => val === "true"),

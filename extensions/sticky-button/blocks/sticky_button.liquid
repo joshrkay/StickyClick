@@ -24,8 +24,8 @@
     data-open-cart-drawer="{{ settings.openCartDrawer | default: true }}"
     data-position="{{ settings.position | default: 'BOTTOM_RIGHT' }}"
     style="
-      --sticky-primary: {{ settings.primaryColor | default: '#000000' }};
-      --sticky-text: {{ settings.textColor | default: '#FFFFFF' }};
+      --sticky-primary: {{ settings.primaryColor | default: '#000000' | remove: ';' | remove: '}' | remove: '{' | truncate: 7, '' }};
+      --sticky-text: {{ settings.textColor | default: '#FFFFFF' | remove: ';' | remove: '}' | remove: '{' | truncate: 7, '' }};
     "
   >
     <div class="sticky-click-wrapper">
@@ -62,7 +62,7 @@
         {%- endif -%}
 
         <button id="sticky-click-btn" type="button">
-          {{ settings.buttonText | default: 'Add to Cart' }}
+          {{ settings.buttonText | default: 'Add to Cart' | escape | truncate: 50, '' }}
           <span class="sticky-price"> - {{ product.selected_or_first_available_variant.price | money }}</span>
         </button>
       {%- else -%}

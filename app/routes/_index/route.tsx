@@ -21,9 +21,9 @@ export default function App() {
   return (
     <div className={styles.index}>
       <div className={styles.content}>
-        <h1 className={styles.heading}>A short heading about [your app]</h1>
+        <h1 className={styles.heading}>StickyClick</h1>
         <p className={styles.text}>
-          A tagline about [your app] that describes your value proposition.
+          A sticky Add to Cart button that boosts conversions on your Shopify store.
         </p>
         {showForm && (
           <Form className={styles.form} method="post" action="/auth/login">
@@ -39,16 +39,16 @@ export default function App() {
         )}
         <ul className={styles.list}>
           <li>
-            <strong>Product feature</strong>. Some detail about your feature and
-            its benefit to your customer.
+            <strong>Sticky Add to Cart</strong>. A floating button that follows
+            shoppers as they scroll, so they can add to cart anytime.
           </li>
           <li>
-            <strong>Product feature</strong>. Some detail about your feature and
-            its benefit to your customer.
+            <strong>Upsell &amp; Quick Buy</strong>. Offer a recommended product
+            alongside the main item and send customers straight to checkout.
           </li>
           <li>
-            <strong>Product feature</strong>. Some detail about your feature and
-            its benefit to your customer.
+            <strong>Cart Summary &amp; Free Shipping Bar</strong>. Show live cart
+            totals and motivate larger orders with a progress bar toward free shipping.
           </li>
         </ul>
       </div>
