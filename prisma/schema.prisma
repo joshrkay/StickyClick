@@ -50,6 +50,27 @@ model ShopSettings {
   openCartDrawer Boolean @default(true)
   showFreeShippingBar Boolean @default(false)
   freeShippingGoal Int @default(5000) // Default $50.00
+  countdownEnabled    Boolean  @default(false)
+  countdownEndTime    DateTime?
+  countdownDuration   Int      @default(0) // seconds; 0 = disabled
+  countdownText       String   @default("Offer ends in")
+  trustBadgesEnabled  Boolean  @default(false)
+  trustBadgesList     String   @default("secure_checkout,money_back")
+  trustBadgesStyle    String   @default("icon_text")
+  analyticsEnabled    Boolean  @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+model StickyClickEvent {
+  id        Int      @id @default(autoincrement())
+  shop      String
+  eventType String
+  variantId String?
+  value     Int      @default(0)
+  metadata  String?
+  createdAt DateTime @default(now())
+
+  @@index([shop, eventType, createdAt])
+  @@index([shop, createdAt])
 }

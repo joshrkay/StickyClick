@@ -13,6 +13,7 @@ import {
   Select,
   TextField,
   Banner,
+  ChoiceList,
 } from "@shopify/polaris";
 import { TitleBar, useAppBridge } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
@@ -163,6 +164,14 @@ function toFormState(settings: Record<string, unknown>): Record<string, string> 
     openCartDrawer: settings.openCartDrawer ? "true" : "false",
     showFreeShippingBar: settings.showFreeShippingBar ? "true" : "false",
     freeShippingGoal: String(settings.freeShippingGoal || 5000),
+    countdownEnabled: settings.countdownEnabled ? "true" : "false",
+    countdownEndTime: String(settings.countdownEndTime ?? ""),
+    countdownDuration: String(settings.countdownDuration || 0),
+    countdownText: String(settings.countdownText ?? "Offer ends in"),
+    trustBadgesEnabled: settings.trustBadgesEnabled ? "true" : "false",
+    trustBadgesList: String(settings.trustBadgesList ?? "secure_checkout,money_back"),
+    trustBadgesStyle: String(settings.trustBadgesStyle ?? "icon_text"),
+    analyticsEnabled: settings.analyticsEnabled ? "true" : "false",
   };
 }
 
@@ -227,26 +236,62 @@ export default function Index() {
 
                     <TextField label="Free Shipping Goal (cents)" name="freeShippingGoal" value={form.freeShippingGoal} onChange={update("freeShippingGoal")} autoComplete="off" helpText="e.g. 5000 = $50.00" disabled={!isProOrHigher} />
 
+                    <Select label="Countdown Timer" name="countdownEnabled" options={[{ label: "Disabled", value: "false" }, { label: "Enabled", value: "true" }]} value={form.countdownEnabled} onChange={update("countdownEnabled")} disabled={!isProOrHigher} />
+
+                    {form.countdownEnabled === "true" && (
+                      <>
+                        <TextField label="Countdown Label" name="countdownText" value={form.countdownText} onChange={update("countdownText")} autoComplete="off" disabled={!isProOrHigher} />
+                        <TextField label="Sale End Date/Time (ISO 8601)" name="countdownEndTime" value={form.countdownEndTime} onChange={update("countdownEndTime")} autoComplete="off" helpText="e.g. 2026-03-15T23:59:00Z. Leave blank for evergreen timer." disabled={!isProOrHigher} />
+                        <TextField label="Evergreen Duration (seconds)" name="countdownDuration" value={form.countdownDuration} onChange={update("countdownDuration")} autoComplete="off" helpText="Per-session countdown. e.g. 900 = 15 minutes. Only used if end date is blank." disabled={!isProOrHigher} />
+                      </>
+                    )}
+
+                    <Select label="Trust Badges" name="trustBadgesEnabled" options={[{ label: "Disabled", value: "false" }, { label: "Enabled", value: "true" }]} value={form.trustBadgesEnabled} onChange={update("trustBadgesEnabled")} disabled={!isProOrHigher} />
+
+                    {form.trustBadgesEnabled === "true" && (
+                      <>
+                        <ChoiceList
+                          title="Select Badges"
+                          allowMultiple
+                          choices={[
+                            { label: "Secure Checkout", value: "secure_checkout" },
+                            { label: "Money-back Guarantee", value: "money_back" },
+                            { label: "Free Returns", value: "free_returns" },
+                            { label: "Fast Shipping", value: "fast_shipping" },
+                            { label: "Satisfaction Guaranteed", value: "satisfaction_guaranteed" },
+                            { label: "SSL Encrypted", value: "ssl_encrypted" },
+                          ]}
+                          selected={form.trustBadgesList.split(",")}
+                          onChange={(selected: string[]) => update("trustBadgesList")(selected.join(","))}
+                          disabled={!isProOrHigher}
+                        />
+                        <input type="hidden" name="trustBadgesList" value={form.trustBadgesList} />
+                        <Select label="Badge Style" name="trustBadgesStyle" options={[{ label: "Icon + Text", value: "icon_text" }, { label: "Icon Only", value: "icon_only" }, { label: "Text Only", value: "text_only" }]} value={form.trustBadgesStyle} onChange={update("trustBadgesStyle")} disabled={!isProOrHigher} />
+                      </>
+                    )}
+
                     <Select label="Enable Quantity Selector" name="enableQuantitySelector" options={[{ label: "Enabled", value: "true" }, { label: "Disabled", value: "false" }]} value={form.enableQuantitySelector} onChange={update("enableQuantitySelector")} disabled={!isPremium} />
 
                     <Select label="Open Cart Drawer after add" name="openCartDrawer" options={[{ label: "Enabled", value: "true" }, { label: "Disabled", value: "false" }]} value={form.openCartDrawer} onChange={update("openCartDrawer")} helpText="When disabled, Add to Cart redirects to /cart (unless Quick Buy is enabled)." disabled={!isPremium} />
+
+                    <Select label="Analytics Tracking" name="analyticsEnabled" options={[{ label: "Disabled", value: "false" }, { label: "Enabled", value: "true" }]} value={form.analyticsEnabled} onChange={update("analyticsEnabled")} helpText="Track add-to-cart events from the sticky button." disabled={!isPremium} />
 
                     <Card>
                       <BlockStack gap="150">
                         <Text as="h3" variant="headingSm">Feature Packaging</Text>
                         <Text as="p" tone="subdued">Current plan: {tier.toUpperCase()}</Text>
                         <Text as="p">Basic: Sticky button core (status, text, colors, position)</Text>
-                        <Text as="p">Pro: Upsell, Quick Buy, Cart Summary, Free Shipping Bar</Text>
-                        <Text as="p">Premium: Quantity Selector, Cart Drawer behavior controls</Text>
+                        <Text as="p">Pro: Upsell, Quick Buy, Cart Summary, Free Shipping Bar, Countdown Timer, Trust Badges</Text>
+                        <Text as="p">Premium: Quantity Selector, Cart Drawer controls, Analytics Dashboard</Text>
                       </BlockStack>
                     </Card>
 
                     {!isProOrHigher && (
-                      <Banner tone="warning">Pro unlocks Upsell, Quick Buy, Cart Summary, and Free Shipping Bar.</Banner>
+                      <Banner tone="warning">Pro unlocks Upsell, Quick Buy, Cart Summary, Free Shipping Bar, Countdown Timer, and Trust Badges.</Banner>
                     )}
 
                     {!isPremium && (
-                      <Banner tone="info">Premium unlocks Quantity Selector and Cart Drawer controls.</Banner>
+                      <Banner tone="info">Premium unlocks Quantity Selector, Cart Drawer controls, and Analytics Dashboard.</Banner>
                     )}
 
                     <Select label="Upsell" name="upsellEnabled" options={[{ label: "Disabled", value: "false" }, { label: "Enabled", value: "true" }]} value={form.upsellEnabled} onChange={update("upsellEnabled")} disabled={!isProOrHigher} />
@@ -287,6 +332,16 @@ export default function Index() {
                 <Text as="p" tone="subdued">Note: Save to update storefront behavior.</Text>
               </BlockStack>
             </Card>
+
+            {isPremium && (
+              <Card>
+                <BlockStack gap="200">
+                  <Text as="h2" variant="headingMd">Analytics</Text>
+                  <Text as="p" tone="subdued">View click and conversion data for your sticky button.</Text>
+                  <Button url="/app/analytics">View Analytics Dashboard</Button>
+                </BlockStack>
+              </Card>
+            )}
           </Layout.Section>
         </Layout>
       </BlockStack>
