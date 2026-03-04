@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, useCallback, type FormEvent } from "react";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { useFetcher, useLoaderData } from "react-router";
 import {
@@ -20,6 +20,8 @@ import { getFeatureTier } from "../billing.server";
 import prisma from "../db.server";
 import { SettingsSchema } from "../schemas/settings";
 import { sanitizeSettingsForTier } from "../utils/tier-gating";
+import { pickSettings } from "../utils/settings-fields";
+import { DEFAULT_SETTINGS } from "../utils/settings-defaults";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
@@ -27,19 +29,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const defaults = {
     id: 0,
     shop: session.shop,
-    enabled: true,
-    primaryColor: "#000000",
-    textColor: "#FFFFFF",
-    buttonText: "Add to Cart",
-    position: "BOTTOM_RIGHT",
-    upsellEnabled: false,
-    upsellProductId: null,
-    quickBuyEnabled: false,
-    showCartSummary: true,
-    enableQuantitySelector: true,
-    openCartDrawer: true,
-    showFreeShippingBar: false,
-    freeShippingGoal: 5000,
+    ...DEFAULT_SETTINGS,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -67,21 +57,10 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   // Apply tier-gating so the UI (and any future metafield reads) reflect
   // the merchant's actual plan, not raw DB defaults.
-  const gatedSettings = sanitizeSettingsForTier(tier, {
-    enabled: settings.enabled,
-    primaryColor: settings.primaryColor,
-    textColor: settings.textColor,
-    buttonText: settings.buttonText,
-    position: settings.position as "BOTTOM_RIGHT" | "BOTTOM_LEFT",
-    upsellEnabled: settings.upsellEnabled,
-    upsellProductId: settings.upsellProductId,
-    quickBuyEnabled: settings.quickBuyEnabled,
-    showCartSummary: settings.showCartSummary,
-    enableQuantitySelector: settings.enableQuantitySelector,
-    openCartDrawer: settings.openCartDrawer,
-    showFreeShippingBar: settings.showFreeShippingBar,
-    freeShippingGoal: settings.freeShippingGoal,
-  });
+  const gatedSettings = sanitizeSettingsForTier(
+    tier,
+    pickSettings(settings as unknown as Record<string, unknown>),
+  );
 
   return {
     settings: { ...settings, ...gatedSettings },
@@ -112,21 +91,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
     const settings = await prisma.shopSettings.update({
       where: { shop: session.shop },
-      data: {
-        enabled: data.enabled,
-        primaryColor: data.primaryColor,
-        textColor: data.textColor,
-        buttonText: data.buttonText,
-        position: data.position,
-        upsellEnabled: data.upsellEnabled,
-        upsellProductId: data.upsellProductId,
-        quickBuyEnabled: data.quickBuyEnabled,
-        showCartSummary: data.showCartSummary,
-        enableQuantitySelector: data.enableQuantitySelector,
-        openCartDrawer: data.openCartDrawer,
-        showFreeShippingBar: data.showFreeShippingBar,
-        freeShippingGoal: data.freeShippingGoal,
-      },
+      data: pickSettings(data as unknown as Record<string, unknown>),
     });
 
     const shopResponse = await admin.graphql(`#graphql { shop { id } }`);
@@ -158,21 +123,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
               namespace: "stickyclick",
               key: "settings",
               type: "json",
-              value: JSON.stringify({
-                enabled: data.enabled,
-                primaryColor: data.primaryColor,
-                textColor: data.textColor,
-                buttonText: data.buttonText,
-                position: data.position,
-                upsellEnabled: data.upsellEnabled,
-                upsellProductId: data.upsellProductId,
-                quickBuyEnabled: data.quickBuyEnabled,
-                showCartSummary: data.showCartSummary,
-                enableQuantitySelector: data.enableQuantitySelector,
-                openCartDrawer: data.openCartDrawer,
-                showFreeShippingBar: data.showFreeShippingBar,
-                freeShippingGoal: data.freeShippingGoal,
-              }),
+              value: JSON.stringify(pickSettings(data as unknown as Record<string, unknown>)),
               ownerId: shopData.shop.id,
             },
           ],
@@ -197,6 +148,24 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   }
 };
 
+function toFormState(settings: Record<string, unknown>): Record<string, string> {
+  return {
+    enabled: settings.enabled ? "true" : "false",
+    buttonText: String(settings.buttonText ?? ""),
+    primaryColor: String(settings.primaryColor ?? ""),
+    textColor: String(settings.textColor ?? ""),
+    position: String(settings.position ?? ""),
+    upsellEnabled: settings.upsellEnabled ? "true" : "false",
+    upsellProductId: String(settings.upsellProductId ?? ""),
+    quickBuyEnabled: settings.quickBuyEnabled ? "true" : "false",
+    showCartSummary: settings.showCartSummary ? "true" : "false",
+    enableQuantitySelector: settings.enableQuantitySelector ? "true" : "false",
+    openCartDrawer: settings.openCartDrawer ? "true" : "false",
+    showFreeShippingBar: settings.showFreeShippingBar ? "true" : "false",
+    freeShippingGoal: String(settings.freeShippingGoal || 5000),
+  };
+}
+
 export default function Index() {
   const { settings, tier } = useLoaderData<typeof loader>();
   const fetcher = useFetcher<typeof action>();
@@ -206,19 +175,11 @@ export default function Index() {
   const isProOrHigher = tier === "pro" || tier === "premium";
   const isPremium = tier === "premium";
 
-  const [enabled, setEnabled] = useState(settings.enabled ? "true" : "false");
-  const [buttonText, setButtonText] = useState(settings.buttonText);
-  const [primaryColor, setPrimaryColor] = useState(settings.primaryColor);
-  const [textColor, setTextColor] = useState(settings.textColor);
-  const [position, setPosition] = useState<string>(settings.position);
-  const [upsellEnabled, setUpsellEnabled] = useState(settings.upsellEnabled ? "true" : "false");
-  const [upsellProductId, setUpsellProductId] = useState(settings.upsellProductId || "");
-  const [quickBuyEnabled, setQuickBuyEnabled] = useState(settings.quickBuyEnabled ? "true" : "false");
-  const [showCartSummary, setShowCartSummary] = useState(settings.showCartSummary ? "true" : "false");
-  const [enableQuantitySelector, setEnableQuantitySelector] = useState(settings.enableQuantitySelector ? "true" : "false");
-  const [openCartDrawer, setOpenCartDrawer] = useState(settings.openCartDrawer ? "true" : "false");
-  const [showFreeShippingBar, setShowFreeShippingBar] = useState(settings.showFreeShippingBar ? "true" : "false");
-  const [freeShippingGoal, setFreeShippingGoal] = useState(String(settings.freeShippingGoal || 5000));
+  const [form, setForm] = useState(() => toFormState(settings));
+  const update = useCallback(
+    (field: string) => (value: string) => setForm((prev) => ({ ...prev, [field]: value })),
+    [],
+  );
 
   useEffect(() => {
     if (fetcher.data?.status === "success") {
@@ -233,8 +194,8 @@ export default function Index() {
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
-    const form = event.target as HTMLFormElement;
-    fetcher.submit(form);
+    const formEl = event.target as HTMLFormElement;
+    fetcher.submit(formEl);
   };
 
   return (
@@ -249,26 +210,26 @@ export default function Index() {
 
                 <fetcher.Form method="post" onSubmit={handleSubmit}>
                   <FormLayout>
-                    <Select label="Status" name="enabled" options={[{ label: "Enabled", value: "true" }, { label: "Disabled", value: "false" }]} value={enabled} onChange={setEnabled} />
+                    <Select label="Status" name="enabled" options={[{ label: "Enabled", value: "true" }, { label: "Disabled", value: "false" }]} value={form.enabled} onChange={update("enabled")} />
 
-                    <TextField label="Button Text" name="buttonText" value={buttonText} onChange={setButtonText} autoComplete="off" />
+                    <TextField label="Button Text" name="buttonText" value={form.buttonText} onChange={update("buttonText")} autoComplete="off" />
 
                     <FormLayout.Group>
-                      <TextField label="Primary Color (Hex)" name="primaryColor" value={primaryColor} onChange={setPrimaryColor} autoComplete="off" />
-                      <TextField label="Text Color (Hex)" name="textColor" value={textColor} onChange={setTextColor} autoComplete="off" />
+                      <TextField label="Primary Color (Hex)" name="primaryColor" value={form.primaryColor} onChange={update("primaryColor")} autoComplete="off" />
+                      <TextField label="Text Color (Hex)" name="textColor" value={form.textColor} onChange={update("textColor")} autoComplete="off" />
                     </FormLayout.Group>
 
-                    <Select label="Position" name="position" options={[{ label: "Bottom Right", value: "BOTTOM_RIGHT" }, { label: "Bottom Left", value: "BOTTOM_LEFT" }]} value={position} onChange={setPosition} />
+                    <Select label="Position" name="position" options={[{ label: "Bottom Right", value: "BOTTOM_RIGHT" }, { label: "Bottom Left", value: "BOTTOM_LEFT" }]} value={form.position} onChange={update("position")} />
 
-                    <Select label="Show Cart Summary" name="showCartSummary" options={[{ label: "Enabled", value: "true" }, { label: "Disabled", value: "false" }]} value={showCartSummary} onChange={setShowCartSummary} disabled={!isProOrHigher} />
+                    <Select label="Show Cart Summary" name="showCartSummary" options={[{ label: "Enabled", value: "true" }, { label: "Disabled", value: "false" }]} value={form.showCartSummary} onChange={update("showCartSummary")} disabled={!isProOrHigher} />
 
-                    <Select label="Enable Free Shipping Bar" name="showFreeShippingBar" options={[{ label: "Enabled", value: "true" }, { label: "Disabled", value: "false" }]} value={showFreeShippingBar} onChange={setShowFreeShippingBar} disabled={!isProOrHigher} />
+                    <Select label="Enable Free Shipping Bar" name="showFreeShippingBar" options={[{ label: "Enabled", value: "true" }, { label: "Disabled", value: "false" }]} value={form.showFreeShippingBar} onChange={update("showFreeShippingBar")} disabled={!isProOrHigher} />
 
-                    <TextField label="Free Shipping Goal (cents)" name="freeShippingGoal" value={freeShippingGoal} onChange={setFreeShippingGoal} autoComplete="off" helpText="e.g. 5000 = $50.00" disabled={!isProOrHigher} />
+                    <TextField label="Free Shipping Goal (cents)" name="freeShippingGoal" value={form.freeShippingGoal} onChange={update("freeShippingGoal")} autoComplete="off" helpText="e.g. 5000 = $50.00" disabled={!isProOrHigher} />
 
-                    <Select label="Enable Quantity Selector" name="enableQuantitySelector" options={[{ label: "Enabled", value: "true" }, { label: "Disabled", value: "false" }]} value={enableQuantitySelector} onChange={setEnableQuantitySelector} disabled={!isPremium} />
+                    <Select label="Enable Quantity Selector" name="enableQuantitySelector" options={[{ label: "Enabled", value: "true" }, { label: "Disabled", value: "false" }]} value={form.enableQuantitySelector} onChange={update("enableQuantitySelector")} disabled={!isPremium} />
 
-                    <Select label="Open Cart Drawer after add" name="openCartDrawer" options={[{ label: "Enabled", value: "true" }, { label: "Disabled", value: "false" }]} value={openCartDrawer} onChange={setOpenCartDrawer} helpText="When disabled, Add to Cart redirects to /cart (unless Quick Buy is enabled)." disabled={!isPremium} />
+                    <Select label="Open Cart Drawer after add" name="openCartDrawer" options={[{ label: "Enabled", value: "true" }, { label: "Disabled", value: "false" }]} value={form.openCartDrawer} onChange={update("openCartDrawer")} helpText="When disabled, Add to Cart redirects to /cart (unless Quick Buy is enabled)." disabled={!isPremium} />
 
                     <Card>
                       <BlockStack gap="150">
@@ -288,19 +249,19 @@ export default function Index() {
                       <Banner tone="info">Premium unlocks Quantity Selector and Cart Drawer controls.</Banner>
                     )}
 
-                    <Select label="Upsell" name="upsellEnabled" options={[{ label: "Disabled", value: "false" }, { label: "Enabled", value: "true" }]} value={upsellEnabled} onChange={setUpsellEnabled} disabled={!isProOrHigher} />
+                    <Select label="Upsell" name="upsellEnabled" options={[{ label: "Disabled", value: "false" }, { label: "Enabled", value: "true" }]} value={form.upsellEnabled} onChange={update("upsellEnabled")} disabled={!isProOrHigher} />
 
                     <TextField
                       label="Upsell Variant ID (Shopify GID or numeric variant id)"
                       name="upsellProductId"
-                      value={upsellProductId}
-                      onChange={setUpsellProductId}
+                      value={form.upsellProductId}
+                      onChange={update("upsellProductId")}
                       autoComplete="off"
                       helpText="Example: 1234567890"
                       disabled={!isProOrHigher}
                     />
 
-                    <Select label="Quick Buy (Skip Cart → Checkout)" name="quickBuyEnabled" options={[{ label: "Disabled", value: "false" }, { label: "Enabled", value: "true" }]} value={quickBuyEnabled} onChange={setQuickBuyEnabled} disabled={!isProOrHigher} />
+                    <Select label="Quick Buy (Skip Cart → Checkout)" name="quickBuyEnabled" options={[{ label: "Disabled", value: "false" }, { label: "Enabled", value: "true" }]} value={form.quickBuyEnabled} onChange={update("quickBuyEnabled")} disabled={!isProOrHigher} />
 
                     <Box paddingBlockStart="400">
                       <Button submit variant="primary" loading={isLoading}>Save Settings</Button>
@@ -316,10 +277,10 @@ export default function Index() {
               <BlockStack gap="200">
                 <Text as="h2" variant="headingMd">Preview</Text>
                 <Box background="bg-surface-secondary" padding="400" borderRadius="200" minHeight="100px">
-                  <div style={{ display: "flex", alignItems: "flex-end", justifyContent: position === "BOTTOM_LEFT" ? "flex-start" : "flex-end", minHeight: "100px" }}>
-                    <div style={{ backgroundColor: primaryColor, color: textColor, padding: "10px 20px", borderRadius: "4px", fontWeight: "bold", boxShadow: "0 4px 6px rgba(0,0,0,0.1)" }}>
-                      {buttonText}
-                      {upsellEnabled === "true" && upsellProductId ? " + Upsell" : ""}
+                  <div style={{ display: "flex", alignItems: "flex-end", justifyContent: form.position === "BOTTOM_LEFT" ? "flex-start" : "flex-end", minHeight: "100px" }}>
+                    <div style={{ backgroundColor: form.primaryColor, color: form.textColor, padding: "10px 20px", borderRadius: "4px", fontWeight: "bold", boxShadow: "0 4px 6px rgba(0,0,0,0.1)" }}>
+                      {form.buttonText}
+                      {form.upsellEnabled === "true" && form.upsellProductId ? " + Upsell" : ""}
                     </div>
                   </div>
                 </Box>

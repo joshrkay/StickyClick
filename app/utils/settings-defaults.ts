@@ -1,0 +1,15 @@
+export const DEFAULT_SETTINGS = {
+  enabled: true,
+  primaryColor: "#000000",
+  textColor: "#FFFFFF",
+  buttonText: "Add to Cart",
+  position: "BOTTOM_RIGHT",
+  upsellEnabled: false,
+  upsellProductId: null,
+  quickBuyEnabled: false,
+  showCartSummary: true,
+  enableQuantitySelector: true,
+  openCartDrawer: true,
+  showFreeShippingBar: false,
+  freeShippingGoal: 5000,
+} as const;
