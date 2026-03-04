@@ -65,7 +65,29 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     console.error("Failed to check billing tier:", error);
   }
 
-  return { settings, tier, error: null };
+  // Apply tier-gating so the UI (and any future metafield reads) reflect
+  // the merchant's actual plan, not raw DB defaults.
+  const gatedSettings = sanitizeSettingsForTier(tier, {
+    enabled: settings.enabled,
+    primaryColor: settings.primaryColor,
+    textColor: settings.textColor,
+    buttonText: settings.buttonText,
+    position: settings.position as "BOTTOM_RIGHT" | "BOTTOM_LEFT",
+    upsellEnabled: settings.upsellEnabled,
+    upsellProductId: settings.upsellProductId,
+    quickBuyEnabled: settings.quickBuyEnabled,
+    showCartSummary: settings.showCartSummary,
+    enableQuantitySelector: settings.enableQuantitySelector,
+    openCartDrawer: settings.openCartDrawer,
+    showFreeShippingBar: settings.showFreeShippingBar,
+    freeShippingGoal: settings.freeShippingGoal,
+  });
+
+  return {
+    settings: { ...settings, ...gatedSettings },
+    tier,
+    error: null,
+  };
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
@@ -183,7 +205,7 @@ export default function Index() {
   const [buttonText, setButtonText] = useState(settings.buttonText);
   const [primaryColor, setPrimaryColor] = useState(settings.primaryColor);
   const [textColor, setTextColor] = useState(settings.textColor);
-  const [position, setPosition] = useState(settings.position);
+  const [position, setPosition] = useState<string>(settings.position);
   const [upsellEnabled, setUpsellEnabled] = useState(settings.upsellEnabled ? "true" : "false");
   const [upsellProductId, setUpsellProductId] = useState(settings.upsellProductId || "");
   const [quickBuyEnabled, setQuickBuyEnabled] = useState(settings.quickBuyEnabled ? "true" : "false");
@@ -198,7 +220,8 @@ export default function Index() {
       shopify.toast.show("Settings saved");
     }
     if (fetcher.data?.status === "error") {
-      const msg = fetcher.data.errors?.form?.[0] || "Failed to save settings";
+      const errors = fetcher.data.errors as Record<string, string[]> | null;
+      const msg = errors?.form?.[0] || "Failed to save settings";
       shopify.toast.show(msg, { isError: true });
     }
   }, [fetcher.data, shopify]);
