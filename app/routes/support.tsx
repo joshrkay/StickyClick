@@ -22,7 +22,7 @@ export default function Support() {
         <li>Customizing the sticky bar?</li>
         <li>Billing questions?</li>
       </ul>
-      <p>Reach out and we'll be happy to assist you!</p>
+      <p>Reach out and we&apos;ll be happy to assist you!</p>
     </div>
   );
 }

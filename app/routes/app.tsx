@@ -21,7 +21,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 };
 
 export default function App() {
-  const { apiKey } = useLoaderData<typeof loader>();
+  const data = useLoaderData<typeof loader>();
+  const apiKey = "apiKey" in data ? data.apiKey : "";
 
   return (
     <ShopifyAppProvider embedded apiKey={apiKey}>

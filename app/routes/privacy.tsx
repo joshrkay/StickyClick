@@ -5,7 +5,7 @@ export default function Privacy() {
       <p>Last updated: {new Date().toLocaleDateString()}</p>
       
       <h2>1. Introduction</h2>
-      <p>StickyClick ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and share your personal information when you use our Shopify application.</p>
+      <p>StickyClick (&ldquo;we&rdquo;, &ldquo;our&rdquo;, or &ldquo;us&rdquo;) is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and share your personal information when you use our Shopify application.</p>
 
       <h2>2. Information We Collect</h2>
       <p>When you install the App, we are automatically able to access certain types of information from your Shopify account:</p>
