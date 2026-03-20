@@ -20,4 +20,5 @@ export const DEFAULT_SETTINGS = {
   trustBadgesList: "secure_checkout,money_back",
   trustBadgesStyle: "icon_text",
   analyticsEnabled: false,
+  onboardingCompleted: false,
 } as const;

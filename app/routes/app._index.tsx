@@ -66,6 +66,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   return {
     settings: { ...settings, ...gatedSettings },
     tier,
+    onboardingCompleted: settings.onboardingCompleted ?? false,
     error: null,
   };
 };
@@ -76,6 +77,14 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   try {
     const formData = await request.formData();
     const rawData = Object.fromEntries(formData);
+
+    if (rawData._action === "dismiss-onboarding") {
+      await prisma.shopSettings.update({
+        where: { shop: session.shop },
+        data: { onboardingCompleted: true },
+      });
+      return { status: "onboarding-dismissed", errors: null, settings: null };
+    }
 
     const result = SettingsSchema.safeParse(rawData);
 
@@ -92,7 +101,10 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
     const settings = await prisma.shopSettings.update({
       where: { shop: session.shop },
-      data: pickSettings(data as unknown as Record<string, unknown>),
+      data: {
+        ...pickSettings(data as unknown as Record<string, unknown>),
+        onboardingCompleted: true,
+      },
     });
 
     const shopResponse = await admin.graphql(`#graphql { shop { id } }`);
@@ -176,13 +188,18 @@ function toFormState(settings: Record<string, unknown>): Record<string, string> 
 }
 
 export default function Index() {
-  const { settings, tier } = useLoaderData<typeof loader>();
+  const { settings, tier, onboardingCompleted } = useLoaderData<typeof loader>();
   const fetcher = useFetcher<typeof action>();
+  const onboardingFetcher = useFetcher<typeof action>();
   const shopify = useAppBridge();
 
   const isLoading = fetcher.state === "submitting" || fetcher.state === "loading";
   const isProOrHigher = tier === "pro" || tier === "premium";
   const isPremium = tier === "premium";
+
+  const showOnboarding = !onboardingCompleted
+    && onboardingFetcher.data?.status !== "onboarding-dismissed"
+    && fetcher.data?.status !== "success";
 
   const [form, setForm] = useState(() => toFormState(settings));
   const update = useCallback(
@@ -211,6 +228,30 @@ export default function Index() {
     <Page>
       <TitleBar title="StickyClick Settings" />
       <BlockStack gap="500">
+        {showOnboarding && (
+          <Banner
+            title="Welcome to StickyClick!"
+            tone="info"
+            onDismiss={() => {
+              onboardingFetcher.submit(
+                { _action: "dismiss-onboarding" },
+                { method: "post" },
+              );
+            }}
+          >
+            <BlockStack gap="200">
+              <Text as="p">
+                Your sticky Add to Cart button is already live with default settings. Here's how to make it yours:
+              </Text>
+              <Text as="p">1. Customize your button colors and text below</Text>
+              <Text as="p">2. Choose where it appears (bottom-right or bottom-left)</Text>
+              <Text as="p">3. Hit "Save Settings" and check your storefront</Text>
+              <Text as="p" tone="subdued">
+                Upgrade to Pro for upsells, countdown timers, trust badges, and more.
+              </Text>
+            </BlockStack>
+          </Banner>
+        )}
         <Layout>
           <Layout.Section>
             <Card>
