@@ -14,6 +14,7 @@ import {
   TextField,
   Banner,
   ChoiceList,
+  InlineStack,
 } from "@shopify/polaris";
 import { TitleBar, useAppBridge } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
@@ -23,6 +24,7 @@ import { SettingsSchema } from "../schemas/settings";
 import { sanitizeSettingsForTier } from "../utils/tier-gating";
 import { pickSettings } from "../utils/settings-fields";
 import { DEFAULT_SETTINGS } from "../utils/settings-defaults";
+import { toVariantGid } from "../utils/variant-gid.server";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
@@ -88,7 +90,38 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     }
 
     const tier = await getFeatureTier(request);
-    const data = sanitizeSettingsForTier(tier, result.data);
+    let data = sanitizeSettingsForTier(tier, result.data);
+
+    if (data.upsellEnabled && data.upsellProductId) {
+      const gid = toVariantGid(String(data.upsellProductId));
+      if (!gid) {
+        return {
+          status: "error",
+          errors: { upsellProductId: ["Enter a valid variant ID or use Browse."] },
+          settings: null,
+        };
+      }
+      const variantRes = await admin.graphql(
+        `#graphql
+          query StickyClickUpsellVariant($id: ID!) {
+            node(id: $id) {
+              ... on ProductVariant { id }
+            }
+          }`,
+        { variables: { id: gid } },
+      );
+      const variantJson = await variantRes.json();
+      if (!variantJson.data?.node?.id) {
+        return {
+          status: "error",
+          errors: {
+            upsellProductId: ["That variant was not found. Use Browse or check the ID."],
+          },
+          settings: null,
+        };
+      }
+      data = { ...data, upsellProductId: gid };
+    }
 
     const settings = await prisma.shopSettings.update({
       where: { shop: session.shop },
@@ -190,13 +223,30 @@ export default function Index() {
     [],
   );
 
+  const handlePickUpsellVariant = useCallback(async () => {
+    try {
+      const selected = await shopify.resourcePicker({
+        type: "variant",
+        action: "select",
+        multiple: false,
+      });
+      const first = selected?.[0];
+      if (first && typeof first.id === "string") {
+        update("upsellProductId")(first.id);
+      }
+    } catch {
+      shopify.toast.show("Could not open the variant picker", { isError: true });
+    }
+  }, [shopify, update]);
+
   useEffect(() => {
     if (fetcher.data?.status === "success") {
       shopify.toast.show("Settings saved");
     }
     if (fetcher.data?.status === "error") {
       const errors = fetcher.data.errors as Record<string, string[]> | null;
-      const msg = errors?.form?.[0] || "Failed to save settings";
+      const msg =
+        errors?.form?.[0] || errors?.upsellProductId?.[0] || "Failed to save settings";
       shopify.toast.show(msg, { isError: true });
     }
   }, [fetcher.data, shopify]);
@@ -296,15 +346,22 @@ export default function Index() {
 
                     <Select label="Upsell" name="upsellEnabled" options={[{ label: "Disabled", value: "false" }, { label: "Enabled", value: "true" }]} value={form.upsellEnabled} onChange={update("upsellEnabled")} disabled={!isProOrHigher} />
 
-                    <TextField
-                      label="Upsell Variant ID (Shopify GID or numeric variant id)"
-                      name="upsellProductId"
-                      value={form.upsellProductId}
-                      onChange={update("upsellProductId")}
-                      autoComplete="off"
-                      helpText="Example: 1234567890"
-                      disabled={!isProOrHigher}
-                    />
+                    <InlineStack gap="300" blockAlign="end" wrap={false}>
+                      <Box minWidth="0" width="100%">
+                        <TextField
+                          label="Upsell variant"
+                          name="upsellProductId"
+                          value={form.upsellProductId}
+                          onChange={update("upsellProductId")}
+                          autoComplete="off"
+                          helpText="Numeric ID, full GID, or Browse."
+                          disabled={!isProOrHigher}
+                        />
+                      </Box>
+                      <Button submit={false} onClick={() => void handlePickUpsellVariant()} disabled={!isProOrHigher}>
+                        Browse
+                      </Button>
+                    </InlineStack>
 
                     <Select label="Quick Buy (Skip Cart → Checkout)" name="quickBuyEnabled" options={[{ label: "Disabled", value: "false" }, { label: "Enabled", value: "true" }]} value={form.quickBuyEnabled} onChange={update("quickBuyEnabled")} disabled={!isProOrHigher} />
 

@@ -1,5 +1,5 @@
 import type { LoaderFunctionArgs } from "react-router";
-import { redirect, Form, useLoaderData } from "react-router";
+import { redirect, Form, Link, useLoaderData } from "react-router";
 
 import { login } from "../../shopify.server";
 
@@ -51,6 +51,11 @@ export default function App() {
             totals and motivate larger orders with a progress bar toward free shipping.
           </li>
         </ul>
+        <nav className={styles.footer} aria-label="Legal">
+          <Link to="/privacy">Privacy Policy</Link>
+          <Link to="/terms">Terms of Service</Link>
+          <Link to="/support">Support</Link>
+        </nav>
       </div>
     </div>
   );
