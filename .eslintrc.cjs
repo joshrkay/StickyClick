@@ -19,7 +19,11 @@ module.exports = {
     commonjs: true,
     es6: true,
   },
-  ignorePatterns: ["!**/.server", "!**/.client"],
+  ignorePatterns: [
+    "!**/.server",
+    "!**/.client",
+    "extensions/sticky-button/assets/sticky-button.js",
+  ],
 
   // Base config
   extends: ["eslint:recommended"],

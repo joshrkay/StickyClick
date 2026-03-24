@@ -2,7 +2,7 @@ export default function Terms() {
   return (
     <div style={{ padding: "40px", maxWidth: "800px", margin: "0 auto", fontFamily: "system-ui, sans-serif" }}>
       <h1>Terms of Service</h1>
-      <p>Last updated: {new Date().toLocaleDateString()}</p>
+      <p>Last updated: March 24, 2026</p>
 
       <h2>1. Introduction</h2>
       <p>Welcome to StickyClick (&ldquo;we&rdquo;, &ldquo;our&rdquo;, or &ldquo;us&rdquo;). By installing and using StickyClick, you agree to be bound by the following terms and conditions.</p>
