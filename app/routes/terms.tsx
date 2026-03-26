@@ -1,32 +1,36 @@
+import { useI18n } from "../i18n";
+
 export default function Terms() {
+  const { t } = useI18n();
+
   return (
     <div style={{ padding: "40px", maxWidth: "800px", margin: "0 auto", fontFamily: "system-ui, sans-serif" }}>
-      <h1>Terms of Service</h1>
-      <p>Last updated: March 24, 2026</p>
+      <h1>{t("terms.title")}</h1>
+      <p>{t("terms.lastUpdated")}</p>
 
-      <h2>1. Introduction</h2>
-      <p>Welcome to StickyClick (&ldquo;we&rdquo;, &ldquo;our&rdquo;, or &ldquo;us&rdquo;). By installing and using StickyClick, you agree to be bound by the following terms and conditions.</p>
+      <h2>{t("terms.introTitle")}</h2>
+      <p>{t("terms.introText")}</p>
 
-      <h2>2. Use License</h2>
-      <p>Permission is granted to install and use the StickyClick Shopify application on your e-commerce store. This license is non-exclusive, non-transferable, and revocable at any time.</p>
+      <h2>{t("terms.licenseTitle")}</h2>
+      <p>{t("terms.licenseText")}</p>
 
-      <h2>3. Disclaimer</h2>
-      <p>The materials and software on StickyClick are provided on an &apos;as is&apos; basis. StickyClick makes no warranties, expressed or implied, and hereby disclaims and negates all other warranties including, without limitation, implied warranties or conditions of merchantability, fitness for a particular purpose, or non-infringement of intellectual property or other violation of rights.</p>
+      <h2>{t("terms.disclaimerTitle")}</h2>
+      <p>{t("terms.disclaimerText")}</p>
 
-      <h2>4. Limitations</h2>
-      <p>In no event shall StickyClick or its suppliers be liable for any damages (including, without limitation, damages for loss of data or profit, or due to business interruption) arising out of the use or inability to use the materials on StickyClick&apos;s website or application.</p>
+      <h2>{t("terms.limitationsTitle")}</h2>
+      <p>{t("terms.limitationsText")}</p>
 
-      <h2>5. Accuracy of Materials</h2>
-      <p>The materials appearing on StickyClick&apos;s website or application could include technical, typographical, or photographic errors. StickyClick does not warrant that any of the materials on its website are accurate, complete or current.</p>
+      <h2>{t("terms.accuracyTitle")}</h2>
+      <p>{t("terms.accuracyText")}</p>
 
-      <h2>6. Modifications</h2>
-      <p>StickyClick may revise these terms of service for its application at any time without notice. By using this application you are agreeing to be bound by the then current version of these terms of service.</p>
+      <h2>{t("terms.modificationsTitle")}</h2>
+      <p>{t("terms.modificationsText")}</p>
 
-      <h2>7. Governing Law</h2>
-      <p>These terms and conditions are governed by and construed in accordance with the laws of Delaware and you irrevocably submit to the exclusive jurisdiction of the courts in that State or location.</p>
+      <h2>{t("terms.governingTitle")}</h2>
+      <p>{t("terms.governingText")}</p>
 
-      <h2>8. Contact Us</h2>
-      <p>If you have any questions about these Terms, please contact us at support@stickyclick.app.</p>
+      <h2>{t("terms.contactTitle")}</h2>
+      <p>{t("terms.contactText")}</p>
     </div>
   );
 }

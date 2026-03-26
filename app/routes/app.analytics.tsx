@@ -16,6 +16,7 @@ import { TitleBar } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
 import { getFeatureTier } from "../billing.server";
 import prisma from "../db.server";
+import { useI18n } from "../i18n";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
@@ -59,13 +60,14 @@ export default function Analytics() {
   const { tier, stats } = useLoaderData<typeof loader>();
   const [searchParams, setSearchParams] = useSearchParams();
   const days = searchParams.get("days") || "7";
+  const { t } = useI18n();
 
   if (tier !== "premium") {
     return (
       <Page>
-        <TitleBar title="Analytics" />
+        <TitleBar title={t("analytics.title")} />
         <Banner tone="warning">
-          Analytics is available on the Premium plan. Upgrade to see how your sticky button performs.
+          {t("analytics.premiumBanner")}
         </Banner>
       </Page>
     );
@@ -73,22 +75,22 @@ export default function Analytics() {
 
   return (
     <Page>
-      <TitleBar title="Analytics" />
+      <TitleBar title={t("analytics.title")} />
       <BlockStack gap="500">
         <Layout>
           <Layout.Section>
             <Card>
               <BlockStack gap="400">
                 <InlineStack align="space-between" blockAlign="center">
-                  <Text as="h2" variant="headingMd">StickyClick Performance</Text>
+                  <Text as="h2" variant="headingMd">{t("analytics.performance")}</Text>
                   <Box width="150px">
                     <Select
                       label=""
                       labelHidden
                       options={[
-                        { label: "Last 7 days", value: "7" },
-                        { label: "Last 14 days", value: "14" },
-                        { label: "Last 30 days", value: "30" },
+                        { label: t("analytics.last7days"), value: "7" },
+                        { label: t("analytics.last14days"), value: "14" },
+                        { label: t("analytics.last30days"), value: "30" },
                       ]}
                       value={days}
                       onChange={(val) => setSearchParams({ days: val })}
@@ -99,14 +101,14 @@ export default function Analytics() {
                 {stats && (
                   <DataTable
                     columnContentTypes={["text", "numeric"]}
-                    headings={["Metric", "Value"]}
+                    headings={[t("analytics.metric"), t("analytics.value")]}
                     rows={[
-                      ["Impressions (sticky bar shown)", String(stats.impressions)],
-                      ["Button Clicks", String(stats.clicks)],
-                      ["Add to Carts", String(stats.addToCarts)],
-                      ["Click-through Rate", `${stats.ctr}%`],
-                      ["Conversion Rate (click → cart)", `${stats.conversionRate}%`],
-                      ["Estimated Revenue", `$${stats.revenue}`],
+                      [t("analytics.impressions"), String(stats.impressions)],
+                      [t("analytics.buttonClicks"), String(stats.clicks)],
+                      [t("analytics.addToCarts"), String(stats.addToCarts)],
+                      [t("analytics.ctr"), `${stats.ctr}%`],
+                      [t("analytics.conversionRate"), `${stats.conversionRate}%`],
+                      [t("analytics.estimatedRevenue"), `$${stats.revenue}`],
                     ]}
                   />
                 )}
