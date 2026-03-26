@@ -27,8 +27,15 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       });
     }
 
-    // 50/50 split based on random assignment (cookie-based in storefront JS)
-    const variant = Math.random() < 0.5 ? "A" : "B";
+    // Accept a preferred variant from the client (persisted in localStorage)
+    const preferredVariant = url.searchParams.get("v");
+    const variant =
+      preferredVariant === "A" || preferredVariant === "B"
+        ? preferredVariant
+        : Math.random() < 0.5
+          ? "A"
+          : "B";
+
     const config =
       variant === "A"
         ? JSON.parse(activeTest.variantAConfig)
