@@ -2,6 +2,7 @@ import type { LoaderFunctionArgs } from "react-router";
 import { redirect, Form, Link, useLoaderData } from "react-router";
 
 import { login } from "../../shopify.server";
+import { useI18n } from "../../i18n";
 
 import styles from "./styles.module.css";
 
@@ -17,44 +18,42 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
 export default function App() {
   const { showForm } = useLoaderData<typeof loader>();
+  const { t } = useI18n();
 
   return (
     <div className={styles.index}>
       <div className={styles.content}>
-        <h1 className={styles.heading}>StickyClick</h1>
+        <h1 className={styles.heading}>{t("landing.title")}</h1>
         <p className={styles.text}>
-          A sticky Add to Cart button that boosts conversions on your Shopify store.
+          {t("landing.description")}
         </p>
         {showForm && (
           <Form className={styles.form} method="post" action="/auth/login">
             <label className={styles.label}>
-              <span>Shop domain</span>
+              <span>{t("landing.shopDomain")}</span>
               <input className={styles.input} type="text" name="shop" />
-              <span>e.g: my-shop-domain.myshopify.com</span>
+              <span>{t("landing.shopDomainPlaceholder")}</span>
             </label>
             <button className={styles.button} type="submit">
-              Log in
+              {t("landing.logIn")}
             </button>
           </Form>
         )}
         <ul className={styles.list}>
           <li>
-            <strong>Sticky Add to Cart</strong>. A floating button that follows
-            shoppers as they scroll, so they can add to cart anytime.
+            <strong>{t("landing.featureStickyTitle")}</strong>. {t("landing.featureStickyDesc")}
           </li>
           <li>
-            <strong>Upsell &amp; Quick Buy</strong>. Offer a recommended product
-            alongside the main item and send customers straight to checkout.
+            <strong>{t("landing.featureUpsellTitle")}</strong>. {t("landing.featureUpsellDesc")}
           </li>
           <li>
-            <strong>Cart Summary &amp; Free Shipping Bar</strong>. Show live cart
-            totals and motivate larger orders with a progress bar toward free shipping.
+            <strong>{t("landing.featureCartTitle")}</strong>. {t("landing.featureCartDesc")}
           </li>
         </ul>
-        <nav className={styles.footer} aria-label="Legal">
-          <Link to="/privacy">Privacy Policy</Link>
-          <Link to="/terms">Terms of Service</Link>
-          <Link to="/support">Support</Link>
+        <nav className={styles.footer} aria-label={t("landing.legal")}>
+          <Link to="/privacy">{t("landing.privacyPolicy")}</Link>
+          <Link to="/terms">{t("landing.termsOfService")}</Link>
+          <Link to="/support">{t("landing.support")}</Link>
         </nav>
       </div>
     </div>

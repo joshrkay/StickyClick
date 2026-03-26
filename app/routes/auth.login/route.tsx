@@ -5,6 +5,7 @@ import { Form, useActionData, useLoaderData } from "react-router";
 
 import { login } from "../../shopify.server";
 import { loginErrorMessage } from "./error.server";
+import { useI18n } from "../../i18n";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const errors = loginErrorMessage(await login(request));
@@ -25,22 +26,28 @@ export default function Auth() {
   const actionData = useActionData<typeof action>();
   const [shop, setShop] = useState("");
   const { errors } = actionData || loaderData;
+  const { t } = useI18n();
+
+  // Resolve error keys to translated strings
+  const resolvedErrors = {
+    shop: errors.shop ? t(errors.shop) : undefined,
+  };
 
   return (
     <AppProvider embedded={false}>
       <s-page>
         <Form method="post">
-        <s-section heading="Log in">
+        <s-section heading={t("login.heading")}>
           <s-text-field
             name="shop"
-            label="Shop domain"
-            details="example.myshopify.com"
+            label={t("login.shopDomain")}
+            details={t("login.shopDomainHint")}
             value={shop}
             onChange={(e) => setShop(e.currentTarget.value)}
             autocomplete="on"
-            error={errors.shop}
+            error={resolvedErrors.shop}
           ></s-text-field>
-          <s-button type="submit">Log in</s-button>
+          <s-button type="submit">{t("login.logIn")}</s-button>
         </s-section>
         </Form>
       </s-page>

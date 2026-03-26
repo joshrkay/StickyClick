@@ -25,6 +25,7 @@ import { sanitizeSettingsForTier } from "../utils/tier-gating";
 import { pickSettings } from "../utils/settings-fields";
 import { DEFAULT_SETTINGS } from "../utils/settings-defaults";
 import { toVariantGid } from "../utils/variant-gid.server";
+import { useI18n } from "../i18n";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
@@ -97,7 +98,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       if (!gid) {
         return {
           status: "error",
-          errors: { upsellProductId: ["Enter a valid variant ID or use Browse."] },
+          errors: { upsellProductId: ["settings.errorInvalidVariant"] },
           settings: null,
         };
       }
@@ -115,7 +116,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         return {
           status: "error",
           errors: {
-            upsellProductId: ["That variant was not found. Use Browse or check the ID."],
+            upsellProductId: ["settings.errorVariantNotFound"],
           },
           settings: null,
         };
@@ -171,14 +172,14 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       return {
         settings,
         status: "error",
-        errors: { form: ["Settings saved to database but failed to sync to your storefront. Please try saving again."] },
+        errors: { form: ["settings.errorSyncFailed"] },
       };
     }
 
     return { settings, status: "success", errors: null };
   } catch (error) {
     console.error("Failed to save settings:", error);
-    return { status: "error", errors: { form: ["Failed to save settings. Please try again."] }, settings: null };
+    return { status: "error", errors: { form: ["settings.errorSaveFailed"] }, settings: null };
   }
 };
 
@@ -218,6 +219,7 @@ export default function Index() {
   const { settings, tier } = useLoaderData<typeof loader>();
   const fetcher = useFetcher<typeof action>();
   const shopify = useAppBridge();
+  const { t } = useI18n();
 
   const isLoading = fetcher.state === "submitting" || fetcher.state === "loading";
   const isProOrHigher = tier === "pro" || tier === "premium";
@@ -241,21 +243,23 @@ export default function Index() {
         update("upsellProductId")(first.id);
       }
     } catch {
-      shopify.toast.show("Could not open the variant picker", { isError: true });
+      shopify.toast.show(t("settings.toastPickerError"), { isError: true });
     }
-  }, [shopify, update]);
+  }, [shopify, update, t]);
 
   useEffect(() => {
     if (fetcher.data?.status === "success") {
-      shopify.toast.show("Settings saved");
+      shopify.toast.show(t("settings.toastSaved"));
     }
     if (fetcher.data?.status === "error") {
       const errors = fetcher.data.errors as Record<string, string[]> | null;
-      const msg =
-        errors?.form?.[0] || errors?.upsellProductId?.[0] || "Failed to save settings";
+      const rawMsg =
+        errors?.form?.[0] || errors?.upsellProductId?.[0] || "settings.toastSaveFailed";
+      // Server returns translation keys; resolve them client-side
+      const msg = rawMsg.startsWith("settings.") ? t(rawMsg) : rawMsg;
       shopify.toast.show(msg, { isError: true });
     }
-  }, [fetcher.data, shopify]);
+  }, [fetcher.data, shopify, t]);
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
@@ -265,64 +269,64 @@ export default function Index() {
 
   return (
     <Page>
-      <TitleBar title="StickyClick Settings" />
+      <TitleBar title={t("settings.title")} />
       <BlockStack gap="500">
         <Layout>
           <Layout.Section>
             <Card>
               <BlockStack gap="500">
-                <Text as="h2" variant="headingMd">Configure your sticky button</Text>
+                <Text as="h2" variant="headingMd">{t("settings.heading")}</Text>
 
                 <fetcher.Form method="post" onSubmit={handleSubmit}>
                   <FormLayout>
-                    <Select label="Status" name="enabled" options={[{ label: "Enabled", value: "true" }, { label: "Disabled", value: "false" }]} value={form.enabled} onChange={update("enabled")} />
+                    <Select label={t("settings.status")} name="enabled" options={[{ label: t("settings.enabled"), value: "true" }, { label: t("settings.disabled"), value: "false" }]} value={form.enabled} onChange={update("enabled")} />
 
-                    <TextField label="Button Text" name="buttonText" value={form.buttonText} onChange={update("buttonText")} autoComplete="off" />
+                    <TextField label={t("settings.buttonText")} name="buttonText" value={form.buttonText} onChange={update("buttonText")} autoComplete="off" />
 
                     <FormLayout.Group>
-                      <TextField label="Primary Color (Hex)" name="primaryColor" value={form.primaryColor} onChange={update("primaryColor")} autoComplete="off" />
-                      <TextField label="Text Color (Hex)" name="textColor" value={form.textColor} onChange={update("textColor")} autoComplete="off" />
+                      <TextField label={t("settings.primaryColor")} name="primaryColor" value={form.primaryColor} onChange={update("primaryColor")} autoComplete="off" />
+                      <TextField label={t("settings.textColor")} name="textColor" value={form.textColor} onChange={update("textColor")} autoComplete="off" />
                     </FormLayout.Group>
 
-                    <Select label="Position" name="position" options={[{ label: "Bottom Right", value: "BOTTOM_RIGHT" }, { label: "Bottom Left", value: "BOTTOM_LEFT" }]} value={form.position} onChange={update("position")} />
+                    <Select label={t("settings.position")} name="position" options={[{ label: t("settings.bottomRight"), value: "BOTTOM_RIGHT" }, { label: t("settings.bottomLeft"), value: "BOTTOM_LEFT" }]} value={form.position} onChange={update("position")} />
 
-                    <Select label="Show Cart Summary" name="showCartSummary" options={[{ label: "Enabled", value: "true" }, { label: "Disabled", value: "false" }]} value={form.showCartSummary} onChange={update("showCartSummary")} disabled={!isProOrHigher} />
+                    <Select label={t("settings.showCartSummary")} name="showCartSummary" options={[{ label: t("settings.enabled"), value: "true" }, { label: t("settings.disabled"), value: "false" }]} value={form.showCartSummary} onChange={update("showCartSummary")} disabled={!isProOrHigher} />
 
-                    <Select label="Enable Free Shipping Bar" name="showFreeShippingBar" options={[{ label: "Enabled", value: "true" }, { label: "Disabled", value: "false" }]} value={form.showFreeShippingBar} onChange={update("showFreeShippingBar")} disabled={!isProOrHigher} />
+                    <Select label={t("settings.enableFreeShippingBar")} name="showFreeShippingBar" options={[{ label: t("settings.enabled"), value: "true" }, { label: t("settings.disabled"), value: "false" }]} value={form.showFreeShippingBar} onChange={update("showFreeShippingBar")} disabled={!isProOrHigher} />
 
-                    <TextField label="Free Shipping Goal (cents)" name="freeShippingGoal" value={form.freeShippingGoal} onChange={update("freeShippingGoal")} autoComplete="off" helpText="e.g. 5000 = $50.00" disabled={!isProOrHigher} />
+                    <TextField label={t("settings.freeShippingGoal")} name="freeShippingGoal" value={form.freeShippingGoal} onChange={update("freeShippingGoal")} autoComplete="off" helpText={t("settings.freeShippingGoalHelp")} disabled={!isProOrHigher} />
 
-                    <Select label="Countdown Timer" name="countdownEnabled" options={[{ label: "Disabled", value: "false" }, { label: "Enabled", value: "true" }]} value={form.countdownEnabled} onChange={update("countdownEnabled")} disabled={!isProOrHigher} />
+                    <Select label={t("settings.countdownTimer")} name="countdownEnabled" options={[{ label: t("settings.disabled"), value: "false" }, { label: t("settings.enabled"), value: "true" }]} value={form.countdownEnabled} onChange={update("countdownEnabled")} disabled={!isProOrHigher} />
 
                     {form.countdownEnabled === "true" && (
                       <>
-                        <TextField label="Countdown Label" name="countdownText" value={form.countdownText} onChange={update("countdownText")} autoComplete="off" disabled={!isProOrHigher} />
-                        <TextField label="Sale End Date/Time (ISO 8601)" name="countdownEndTime" value={form.countdownEndTime} onChange={update("countdownEndTime")} autoComplete="off" helpText="e.g. 2026-03-15T23:59:00Z. Leave blank for evergreen timer." disabled={!isProOrHigher} />
-                        <TextField label="Evergreen Duration (seconds)" name="countdownDuration" value={form.countdownDuration} onChange={update("countdownDuration")} autoComplete="off" helpText="Per-session countdown. e.g. 900 = 15 minutes. Only used if end date is blank." disabled={!isProOrHigher} />
+                        <TextField label={t("settings.countdownLabel")} name="countdownText" value={form.countdownText} onChange={update("countdownText")} autoComplete="off" disabled={!isProOrHigher} />
+                        <TextField label={t("settings.countdownEndTime")} name="countdownEndTime" value={form.countdownEndTime} onChange={update("countdownEndTime")} autoComplete="off" helpText={t("settings.countdownEndTimeHelp")} disabled={!isProOrHigher} />
+                        <TextField label={t("settings.countdownDuration")} name="countdownDuration" value={form.countdownDuration} onChange={update("countdownDuration")} autoComplete="off" helpText={t("settings.countdownDurationHelp")} disabled={!isProOrHigher} />
                       </>
                     )}
 
-                    <Select label="Trust Badges" name="trustBadgesEnabled" options={[{ label: "Disabled", value: "false" }, { label: "Enabled", value: "true" }]} value={form.trustBadgesEnabled} onChange={update("trustBadgesEnabled")} disabled={!isProOrHigher} />
+                    <Select label={t("settings.trustBadges")} name="trustBadgesEnabled" options={[{ label: t("settings.disabled"), value: "false" }, { label: t("settings.enabled"), value: "true" }]} value={form.trustBadgesEnabled} onChange={update("trustBadgesEnabled")} disabled={!isProOrHigher} />
 
                     {form.trustBadgesEnabled === "true" && (
                       <>
                         <ChoiceList
-                          title="Select Badges"
+                          title={t("settings.selectBadges")}
                           allowMultiple
                           choices={[
-                            { label: "Secure Checkout", value: "secure_checkout" },
-                            { label: "Money-back Guarantee", value: "money_back" },
-                            { label: "Free Returns", value: "free_returns" },
-                            { label: "Fast Shipping", value: "fast_shipping" },
-                            { label: "Satisfaction Guaranteed", value: "satisfaction_guaranteed" },
-                            { label: "SSL Encrypted", value: "ssl_encrypted" },
+                            { label: t("settings.badgeSecureCheckout"), value: "secure_checkout" },
+                            { label: t("settings.badgeMoneyBack"), value: "money_back" },
+                            { label: t("settings.badgeFreeReturns"), value: "free_returns" },
+                            { label: t("settings.badgeFastShipping"), value: "fast_shipping" },
+                            { label: t("settings.badgeSatisfaction"), value: "satisfaction_guaranteed" },
+                            { label: t("settings.badgeSslEncrypted"), value: "ssl_encrypted" },
                           ]}
                           selected={form.trustBadgesList.split(",")}
                           onChange={(selected: string[]) => update("trustBadgesList")(selected.join(","))}
                           disabled={!isProOrHigher}
                         />
                         <input type="hidden" name="trustBadgesList" value={form.trustBadgesList} />
-                        <Select label="Badge Style" name="trustBadgesStyle" options={[{ label: "Icon + Text", value: "icon_text" }, { label: "Icon Only", value: "icon_only" }, { label: "Text Only", value: "text_only" }]} value={form.trustBadgesStyle} onChange={update("trustBadgesStyle")} disabled={!isProOrHigher} />
+                        <Select label={t("settings.badgeStyle")} name="trustBadgesStyle" options={[{ label: t("settings.badgeIconText"), value: "icon_text" }, { label: t("settings.badgeIconOnly"), value: "icon_only" }, { label: t("settings.badgeTextOnly"), value: "text_only" }]} value={form.trustBadgesStyle} onChange={update("trustBadgesStyle")} disabled={!isProOrHigher} />
                       </>
                     )}
 
@@ -344,51 +348,51 @@ export default function Index() {
 
                     <Select label="Enable Quantity Selector" name="enableQuantitySelector" options={[{ label: "Enabled", value: "true" }, { label: "Disabled", value: "false" }]} value={form.enableQuantitySelector} onChange={update("enableQuantitySelector")} disabled={!isPremium} />
 
-                    <Select label="Open Cart Drawer after add" name="openCartDrawer" options={[{ label: "Enabled", value: "true" }, { label: "Disabled", value: "false" }]} value={form.openCartDrawer} onChange={update("openCartDrawer")} helpText="When disabled, Add to Cart redirects to /cart (unless Quick Buy is enabled)." disabled={!isPremium} />
+                    <Select label={t("settings.openCartDrawer")} name="openCartDrawer" options={[{ label: t("settings.enabled"), value: "true" }, { label: t("settings.disabled"), value: "false" }]} value={form.openCartDrawer} onChange={update("openCartDrawer")} helpText={t("settings.openCartDrawerHelp")} disabled={!isPremium} />
 
-                    <Select label="Analytics Tracking" name="analyticsEnabled" options={[{ label: "Disabled", value: "false" }, { label: "Enabled", value: "true" }]} value={form.analyticsEnabled} onChange={update("analyticsEnabled")} helpText="Track add-to-cart events from the sticky button." disabled={!isPremium} />
+                    <Select label={t("settings.analyticsTracking")} name="analyticsEnabled" options={[{ label: t("settings.disabled"), value: "false" }, { label: t("settings.enabled"), value: "true" }]} value={form.analyticsEnabled} onChange={update("analyticsEnabled")} helpText={t("settings.analyticsTrackingHelp")} disabled={!isPremium} />
 
                     <Card>
                       <BlockStack gap="150">
-                        <Text as="h3" variant="headingSm">Feature Packaging</Text>
-                        <Text as="p" tone="subdued">Current plan: {tier.toUpperCase()}</Text>
-                        <Text as="p">Basic: Sticky button core (status, text, colors, position)</Text>
-                        <Text as="p">Pro: Upsell, Quick Buy, Cart Summary, Free Shipping Bar, Countdown Timer, Trust Badges, Low Stock Badge, Auto Discounts, Multi-Currency</Text>
-                        <Text as="p">Premium: Quantity Selector, Cart Drawer controls, Analytics Dashboard, Smart Collection Upsells, A/B Testing</Text>
+                        <Text as="h3" variant="headingSm">{t("settings.featurePackaging")}</Text>
+                        <Text as="p" tone="subdued">{t("settings.currentPlan", { tier: tier.toUpperCase() })}</Text>
+                        <Text as="p">{t("settings.basicFeatures")}</Text>
+                        <Text as="p">{t("settings.proFeatures")}</Text>
+                        <Text as="p">{t("settings.premiumFeatures")}</Text>
                       </BlockStack>
                     </Card>
 
                     {!isProOrHigher && (
-                      <Banner tone="warning">Pro unlocks Upsell, Quick Buy, Cart Summary, Free Shipping Bar, Countdown Timer, Trust Badges, Low Stock Badge, Auto Discounts, and Multi-Currency.</Banner>
+                      <Banner tone="warning">{t("settings.proBanner")}</Banner>
                     )}
 
                     {!isPremium && (
-                      <Banner tone="info">Premium unlocks Quantity Selector, Cart Drawer controls, Analytics Dashboard, Smart Collection Upsells, and A/B Testing.</Banner>
+                      <Banner tone="info">{t("settings.premiumBanner")}</Banner>
                     )}
 
-                    <Select label="Upsell" name="upsellEnabled" options={[{ label: "Disabled", value: "false" }, { label: "Enabled", value: "true" }]} value={form.upsellEnabled} onChange={update("upsellEnabled")} disabled={!isProOrHigher} />
+                    <Select label={t("settings.upsell")} name="upsellEnabled" options={[{ label: t("settings.disabled"), value: "false" }, { label: t("settings.enabled"), value: "true" }]} value={form.upsellEnabled} onChange={update("upsellEnabled")} disabled={!isProOrHigher} />
 
                     <InlineStack gap="300" blockAlign="end" wrap={false}>
                       <Box minWidth="0" width="100%">
                         <TextField
-                          label="Upsell variant"
+                          label={t("settings.upsellVariant")}
                           name="upsellProductId"
                           value={form.upsellProductId}
                           onChange={update("upsellProductId")}
                           autoComplete="off"
-                          helpText="Numeric ID, full GID, or Browse."
+                          helpText={t("settings.upsellVariantHelp")}
                           disabled={!isProOrHigher}
                         />
                       </Box>
                       <Button submit={false} onClick={() => void handlePickUpsellVariant()} disabled={!isProOrHigher}>
-                        Browse
+                        {t("settings.browse")}
                       </Button>
                     </InlineStack>
 
-                    <Select label="Quick Buy (Skip Cart → Checkout)" name="quickBuyEnabled" options={[{ label: "Disabled", value: "false" }, { label: "Enabled", value: "true" }]} value={form.quickBuyEnabled} onChange={update("quickBuyEnabled")} disabled={!isProOrHigher} />
+                    <Select label={t("settings.quickBuy")} name="quickBuyEnabled" options={[{ label: t("settings.disabled"), value: "false" }, { label: t("settings.enabled"), value: "true" }]} value={form.quickBuyEnabled} onChange={update("quickBuyEnabled")} disabled={!isProOrHigher} />
 
                     <Box paddingBlockStart="400">
-                      <Button submit variant="primary" loading={isLoading}>Save Settings</Button>
+                      <Button submit variant="primary" loading={isLoading}>{t("settings.saveSettings")}</Button>
                     </Box>
                   </FormLayout>
                 </fetcher.Form>
@@ -399,25 +403,25 @@ export default function Index() {
           <Layout.Section variant="oneThird">
             <Card>
               <BlockStack gap="200">
-                <Text as="h2" variant="headingMd">Preview</Text>
+                <Text as="h2" variant="headingMd">{t("settings.preview")}</Text>
                 <Box background="bg-surface-secondary" padding="400" borderRadius="200" minHeight="100px">
                   <div style={{ display: "flex", alignItems: "flex-end", justifyContent: form.position === "BOTTOM_LEFT" ? "flex-start" : "flex-end", minHeight: "100px" }}>
                     <div style={{ backgroundColor: form.primaryColor, color: form.textColor, padding: "10px 20px", borderRadius: "4px", fontWeight: "bold", boxShadow: "0 4px 6px rgba(0,0,0,0.1)" }}>
                       {form.buttonText}
-                      {form.upsellEnabled === "true" && form.upsellProductId ? " + Upsell" : ""}
+                      {form.upsellEnabled === "true" && form.upsellProductId ? t("settings.upsellPreviewSuffix") : ""}
                     </div>
                   </div>
                 </Box>
-                <Text as="p" tone="subdued">Note: Save to update storefront behavior.</Text>
+                <Text as="p" tone="subdued">{t("settings.previewNote")}</Text>
               </BlockStack>
             </Card>
 
             {isPremium && (
               <Card>
                 <BlockStack gap="200">
-                  <Text as="h2" variant="headingMd">Analytics</Text>
-                  <Text as="p" tone="subdued">View click and conversion data for your sticky button.</Text>
-                  <Button url="/app/analytics">View Analytics Dashboard</Button>
+                  <Text as="h2" variant="headingMd">{t("settings.analyticsCard")}</Text>
+                  <Text as="p" tone="subdued">{t("settings.analyticsCardDesc")}</Text>
+                  <Button url="/app/analytics">{t("settings.viewAnalyticsDashboard")}</Button>
                 </BlockStack>
               </Card>
             )}
