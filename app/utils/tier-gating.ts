@@ -19,12 +19,18 @@ export function sanitizeSettingsForTier(
     sanitized.showFreeShippingBar = false;
     sanitized.countdownEnabled = false;
     sanitized.trustBadgesEnabled = false;
+    // Pro features gated for basic
+    sanitized.lowStockEnabled = false;
+    sanitized.showDiscountBadge = false;
+    sanitized.multiCurrencyEnabled = false;
   }
 
   if (tier !== "premium") {
     sanitized.enableQuantitySelector = false;
     sanitized.openCartDrawer = false;
     sanitized.analyticsEnabled = false;
+    // Premium features
+    sanitized.smartUpsellEnabled = false;
   }
 
   return sanitized;

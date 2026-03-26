@@ -58,8 +58,33 @@ model ShopSettings {
   trustBadgesList     String   @default("secure_checkout,money_back")
   trustBadgesStyle    String   @default("icon_text")
   analyticsEnabled    Boolean  @default(false)
+  // Feature 1: Low Stock Urgency
+  lowStockEnabled     Boolean  @default(false)
+  lowStockThreshold   Int      @default(10)
+  // Feature 2: Automatic Discount Display
+  showDiscountBadge   Boolean  @default(false)
+  // Feature 3: Smart Collection-Based Upsells
+  smartUpsellEnabled  Boolean  @default(false)
+  smartUpsellStrategy String   @default("same_collection") // same_collection | best_selling | highest_price
+  // Feature 4: Multi-Currency / Markets Support
+  multiCurrencyEnabled Boolean @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+model ABTest {
+  id              Int      @id @default(autoincrement())
+  shop            String
+  name            String
+  status          String   @default("draft") // draft | running | completed
+  variantAConfig  String   @db.Text // JSON config for variant A
+  variantBConfig  String   @db.Text // JSON config for variant B
+  startDate       DateTime?
+  endDate         DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([shop, status])
 }
 
 model StickyClickEvent {
@@ -67,9 +92,10 @@ model StickyClickEvent {
   shop      String
   eventType String
   variantId String?
-  value     Int      @default(0)
-  metadata  String?
-  createdAt DateTime @default(now())
+  value       Int      @default(0)
+  metadata    String?
+  testVariant String?  // "A" or "B" for A/B test tracking
+  createdAt   DateTime @default(now())
 
   @@index([shop, eventType, createdAt])
   @@index([shop, createdAt])

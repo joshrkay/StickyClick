@@ -6,6 +6,7 @@ const EventSchema = z.object({
   eventType: z.enum(["impression", "click", "add_to_cart"]),
   variantId: z.string().nullable().optional(),
   value: z.number().int().min(0).default(0),
+  testVariant: z.enum(["A", "B"]).nullable().optional(),
 });
 
 const RATE_WINDOW_MS = 60_000;
@@ -69,6 +70,7 @@ export async function ingestStickyClickEvent(
       eventType: parsed.data.eventType,
       variantId: parsed.data.variantId ?? null,
       value: parsed.data.value,
+      testVariant: parsed.data.testVariant ?? null,
     },
   });
 

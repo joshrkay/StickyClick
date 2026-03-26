@@ -20,4 +20,10 @@ export const DEFAULT_SETTINGS = {
   trustBadgesList: "secure_checkout,money_back",
   trustBadgesStyle: "icon_text",
   analyticsEnabled: false,
+  lowStockEnabled: false,
+  lowStockThreshold: 10,
+  showDiscountBadge: false,
+  smartUpsellEnabled: false,
+  smartUpsellStrategy: "same_collection",
+  multiCurrencyEnabled: false,
 } as const;

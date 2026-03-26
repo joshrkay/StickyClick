@@ -206,6 +206,12 @@ function toFormState(settings: Record<string, unknown>): Record<string, string> 
     trustBadgesList: String(settings.trustBadgesList ?? "secure_checkout,money_back"),
     trustBadgesStyle: String(settings.trustBadgesStyle ?? "icon_text"),
     analyticsEnabled: settings.analyticsEnabled ? "true" : "false",
+    lowStockEnabled: settings.lowStockEnabled ? "true" : "false",
+    lowStockThreshold: String(settings.lowStockThreshold || 10),
+    showDiscountBadge: settings.showDiscountBadge ? "true" : "false",
+    smartUpsellEnabled: settings.smartUpsellEnabled ? "true" : "false",
+    smartUpsellStrategy: String(settings.smartUpsellStrategy ?? "same_collection"),
+    multiCurrencyEnabled: settings.multiCurrencyEnabled ? "true" : "false",
   };
 }
 
@@ -324,7 +330,23 @@ export default function Index() {
                       </>
                     )}
 
-                    <Select label={t("settings.enableQuantitySelector")} name="enableQuantitySelector" options={[{ label: t("settings.enabled"), value: "true" }, { label: t("settings.disabled"), value: "false" }]} value={form.enableQuantitySelector} onChange={update("enableQuantitySelector")} disabled={!isPremium} />
+                    <Select label="Low Stock Urgency Badge" name="lowStockEnabled" options={[{ label: "Disabled", value: "false" }, { label: "Enabled", value: "true" }]} value={form.lowStockEnabled} onChange={update("lowStockEnabled")} helpText="Show 'Only X left!' when inventory is low." disabled={!isProOrHigher} />
+
+                    {form.lowStockEnabled === "true" && (
+                      <TextField label="Low Stock Threshold" name="lowStockThreshold" value={form.lowStockThreshold} onChange={update("lowStockThreshold")} autoComplete="off" helpText="Show badge when inventory is at or below this number." disabled={!isProOrHigher} />
+                    )}
+
+                    <Select label="Auto Discount Badge" name="showDiscountBadge" options={[{ label: "Disabled", value: "false" }, { label: "Enabled", value: "true" }]} value={form.showDiscountBadge} onChange={update("showDiscountBadge")} helpText="Automatically show active discounts on the sticky button." disabled={!isProOrHigher} />
+
+                    <Select label="Multi-Currency (Markets)" name="multiCurrencyEnabled" options={[{ label: "Disabled", value: "false" }, { label: "Enabled", value: "true" }]} value={form.multiCurrencyEnabled} onChange={update("multiCurrencyEnabled")} helpText="Display prices in the customer's local currency via Shopify Markets." disabled={!isProOrHigher} />
+
+                    <Select label="Smart Collection Upsells" name="smartUpsellEnabled" options={[{ label: "Disabled", value: "false" }, { label: "Enabled", value: "true" }]} value={form.smartUpsellEnabled} onChange={update("smartUpsellEnabled")} helpText="Auto-recommend products from the same collection (Premium)." disabled={!isPremium} />
+
+                    {form.smartUpsellEnabled === "true" && (
+                      <Select label="Upsell Strategy" name="smartUpsellStrategy" options={[{ label: "Same Collection", value: "same_collection" }, { label: "Best Selling", value: "best_selling" }, { label: "Highest Price", value: "highest_price" }]} value={form.smartUpsellStrategy} onChange={update("smartUpsellStrategy")} disabled={!isPremium} />
+                    )}
+
+                    <Select label="Enable Quantity Selector" name="enableQuantitySelector" options={[{ label: "Enabled", value: "true" }, { label: "Disabled", value: "false" }]} value={form.enableQuantitySelector} onChange={update("enableQuantitySelector")} disabled={!isPremium} />
 
                     <Select label={t("settings.openCartDrawer")} name="openCartDrawer" options={[{ label: t("settings.enabled"), value: "true" }, { label: t("settings.disabled"), value: "false" }]} value={form.openCartDrawer} onChange={update("openCartDrawer")} helpText={t("settings.openCartDrawerHelp")} disabled={!isPremium} />
 
@@ -400,6 +422,16 @@ export default function Index() {
                   <Text as="h2" variant="headingMd">{t("settings.analyticsCard")}</Text>
                   <Text as="p" tone="subdued">{t("settings.analyticsCardDesc")}</Text>
                   <Button url="/app/analytics">{t("settings.viewAnalyticsDashboard")}</Button>
+                </BlockStack>
+              </Card>
+            )}
+
+            {isPremium && (
+              <Card>
+                <BlockStack gap="200">
+                  <Text as="h2" variant="headingMd">A/B Testing</Text>
+                  <Text as="p" tone="subdued">Test different button configurations to optimize conversions.</Text>
+                  <Button url="/app/ab-testing">Manage A/B Tests</Button>
                 </BlockStack>
               </Card>
             )}

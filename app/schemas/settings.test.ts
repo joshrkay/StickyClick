@@ -23,6 +23,12 @@ const validInput = {
   trustBadgesList: "secure_checkout,money_back",
   trustBadgesStyle: "icon_text" as const,
   analyticsEnabled: "false",
+  lowStockEnabled: "false",
+  lowStockThreshold: "10",
+  showDiscountBadge: "false",
+  smartUpsellEnabled: "false",
+  smartUpsellStrategy: "same_collection" as const,
+  multiCurrencyEnabled: "false",
 };
 
 describe("SettingsSchema", () => {
