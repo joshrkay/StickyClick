@@ -12,7 +12,6 @@ import { Select, InlineStack, Box } from "@shopify/polaris";
 
 import { authenticate, login } from "../shopify.server";
 import {
-  I18nProvider,
   useI18n,
   SUPPORTED_LOCALES,
   LOCALE_LABELS,
@@ -74,9 +73,7 @@ export default function App() {
 
   return (
     <ShopifyAppProvider embedded apiKey={apiKey}>
-      <I18nProvider>
-        <AppContent />
-      </I18nProvider>
+      <AppContent />
     </ShopifyAppProvider>
   );
 }

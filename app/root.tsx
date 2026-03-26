@@ -10,17 +10,10 @@ import {
 import { I18nProvider, useI18n } from "./i18n";
 
 function HtmlShell({ children }: { children: React.ReactNode }) {
-  let lang = "en";
-  try {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const { locale } = useI18n();
-    lang = locale;
-  } catch {
-    // I18nProvider not mounted yet (e.g. error boundary); fall back to "en"
-  }
+  const { locale } = useI18n();
 
   return (
-    <html lang={lang}>
+    <html lang={locale}>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
