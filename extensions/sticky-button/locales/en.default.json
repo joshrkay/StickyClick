@@ -6,5 +6,27 @@
     "home": {
       "recommendationText": "Recommended Product!"
     }
+  },
+  "storefront": {
+    "addToCart": "Add to Cart",
+    "soldOut": "Sold Out",
+    "freeShippingOver": "Free shipping over",
+    "freeShippingUnlocked": "You unlocked Free Shipping!",
+    "addForFreeShipping": "Add {amount} for Free Shipping",
+    "addRecommendedItem": "Add recommended item",
+    "addRecommendedItemAria": "Add recommended item to cart",
+    "items": "items",
+    "item": "item",
+    "zeroItems": "0 items",
+    "quantitySelector": "Quantity selector",
+    "decreaseQuantity": "Decrease quantity",
+    "increaseQuantity": "Increase quantity",
+    "offerEndsIn": "Offer ends in",
+    "badgeSecureCheckout": "Secure Checkout",
+    "badgeMoneyBack": "Money-back Guarantee",
+    "badgeFreeReturns": "Free Returns",
+    "badgeFastShipping": "Fast Shipping",
+    "badgeSatisfaction": "100% Satisfaction",
+    "badgeSslEncrypted": "SSL Encrypted"
   }
 }

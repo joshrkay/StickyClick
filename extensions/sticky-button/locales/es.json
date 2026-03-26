@@ -1,0 +1,32 @@
+{
+  "ratings": {
+    "stars": {
+      "label": "Calificaciones"
+    },
+    "home": {
+      "recommendationText": "¡Producto recomendado!"
+    }
+  },
+  "storefront": {
+    "addToCart": "Agregar al carrito",
+    "soldOut": "Agotado",
+    "freeShippingOver": "Envío gratis a partir de",
+    "freeShippingUnlocked": "¡Desbloqueaste el envío gratis!",
+    "addForFreeShipping": "Agrega {amount} para envío gratis",
+    "addRecommendedItem": "Agregar artículo recomendado",
+    "addRecommendedItemAria": "Agregar artículo recomendado al carrito",
+    "items": "artículos",
+    "item": "artículo",
+    "zeroItems": "0 artículos",
+    "quantitySelector": "Selector de cantidad",
+    "decreaseQuantity": "Disminuir cantidad",
+    "increaseQuantity": "Aumentar cantidad",
+    "offerEndsIn": "La oferta termina en",
+    "badgeSecureCheckout": "Pago seguro",
+    "badgeMoneyBack": "Garantía de devolución",
+    "badgeFreeReturns": "Devoluciones gratis",
+    "badgeFastShipping": "Envío rápido",
+    "badgeSatisfaction": "100% Satisfacción",
+    "badgeSslEncrypted": "Cifrado SSL"
+  }
+}

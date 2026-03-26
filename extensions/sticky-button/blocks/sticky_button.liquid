@@ -32,6 +32,16 @@
     data-trust-badges-style="{{ settings.trustBadgesStyle | default: 'icon_text' }}"
     data-analytics-enabled="{{ settings.analyticsEnabled | default: false }}"
     data-shop-domain="{{ shop.permanent_domain }}"
+    data-t-free-shipping-unlocked="{{ 'storefront.freeShippingUnlocked' | t }}"
+    data-t-add-for-free-shipping="{{ 'storefront.addForFreeShipping' | t }}"
+    data-t-item="{{ 'storefront.item' | t }}"
+    data-t-items="{{ 'storefront.items' | t }}"
+    data-t-badge-secure-checkout="{{ 'storefront.badgeSecureCheckout' | t }}"
+    data-t-badge-money-back="{{ 'storefront.badgeMoneyBack' | t }}"
+    data-t-badge-free-returns="{{ 'storefront.badgeFreeReturns' | t }}"
+    data-t-badge-fast-shipping="{{ 'storefront.badgeFastShipping' | t }}"
+    data-t-badge-satisfaction="{{ 'storefront.badgeSatisfaction' | t }}"
+    data-t-badge-ssl-encrypted="{{ 'storefront.badgeSslEncrypted' | t }}"
     style="
       --sticky-primary: {{ settings.primaryColor | default: '#000000' | remove: ';' | remove: '}' | remove: '{' | truncate: 7, '' }};
       --sticky-text: {{ settings.textColor | default: '#FFFFFF' | remove: ';' | remove: '}' | remove: '{' | truncate: 7, '' }};
@@ -40,7 +50,7 @@
     <div class="sticky-click-wrapper">
       {%- if settings.showFreeShippingBar -%}
         <div id="sticky-shipping-bar-container" class="sticky-shipping-bar-hidden">
-          <p id="sticky-shipping-text">Free shipping over <span id="sticky-shipping-goal-text"></span></p>
+          <p id="sticky-shipping-text">{{ 'storefront.freeShippingOver' | t }} <span id="sticky-shipping-goal-text"></span></p>
           <div class="sticky-shipping-progress-bg">
             <div id="sticky-shipping-progress-fill" style="width: 0%;"></div>
           </div>
@@ -66,23 +76,23 @@
       {%- if product.selected_or_first_available_variant.available -%}
         {%- if settings.upsellEnabled and settings.upsellProductId != blank -%}
           <label class="sticky-upsell-row" for="sticky-upsell-checkbox">
-            <input id="sticky-upsell-checkbox" type="checkbox" checked aria-label="Add recommended item to cart">
-            <span>Add recommended item</span>
+            <input id="sticky-upsell-checkbox" type="checkbox" checked aria-label="{{ 'storefront.addRecommendedItemAria' | t }}">
+            <span>{{ 'storefront.addRecommendedItem' | t }}</span>
           </label>
         {%- endif -%}
 
         {%- if settings.showCartSummary != false -%}
           <div class="sticky-click-meta" aria-live="polite">
-            <span id="sticky-cart-count">0 items</span>
+            <span id="sticky-cart-count">{{ 'storefront.zeroItems' | t }}</span>
             <span id="sticky-cart-subtotal">$0.00</span>
           </div>
         {%- endif -%}
 
         {%- if settings.enableQuantitySelector != false -%}
-          <div class="sticky-qty-row" aria-label="Quantity selector">
-            <button id="sticky-qty-decrease" class="sticky-qty-btn" type="button" aria-label="Decrease quantity">−</button>
+          <div class="sticky-qty-row" aria-label="{{ 'storefront.quantitySelector' | t }}">
+            <button id="sticky-qty-decrease" class="sticky-qty-btn" type="button" aria-label="{{ 'storefront.decreaseQuantity' | t }}">−</button>
             <span id="sticky-qty-value" class="sticky-qty-value">1</span>
-            <button id="sticky-qty-increase" class="sticky-qty-btn" type="button" aria-label="Increase quantity">+</button>
+            <button id="sticky-qty-increase" class="sticky-qty-btn" type="button" aria-label="{{ 'storefront.increaseQuantity' | t }}">+</button>
           </div>
         {%- endif -%}
 
@@ -92,7 +102,7 @@
         </button>
       {%- else -%}
         <button id="sticky-click-btn" disabled>
-          Sold Out
+          {{ 'storefront.soldOut' | t }}
         </button>
       {%- endif -%}
     </div>
