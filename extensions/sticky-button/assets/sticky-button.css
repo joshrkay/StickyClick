@@ -199,6 +199,96 @@
   }
 }
 
+/* Low stock urgency badge */
+.sticky-low-stock-badge {
+  background: #fef2f2;
+  color: #dc2626;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  animation: sticky-pulse 2s ease-in-out infinite;
+}
+
+@keyframes sticky-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* Discount badge */
+.sticky-discount-badge {
+  background: #ecfdf5;
+  color: #059669;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sticky-discount-hidden {
+  display: none;
+}
+
+/* Smart collection upsells */
+.sticky-smart-upsell {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 280px;
+}
+
+.sticky-smart-upsell-item {
+  background: #fff;
+  padding: 6px 8px;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.sticky-smart-upsell-item img {
+  border-radius: 4px;
+  object-fit: cover;
+  width: 40px;
+  height: 40px;
+}
+
+.sticky-smart-upsell-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.sticky-smart-upsell-title {
+  font-weight: 600;
+  color: #111;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sticky-smart-upsell-price {
+  color: #555;
+}
+
+.sticky-smart-upsell-check {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
 /* Mobile full width override if desired */
 @media (max-width: 480px) {
   #sticky-click-container {

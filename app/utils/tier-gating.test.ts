@@ -24,6 +24,12 @@ const allEnabled: SettingsOutput = {
   trustBadgesList: "secure_checkout,money_back",
   trustBadgesStyle: "icon_text",
   analyticsEnabled: true,
+  lowStockEnabled: true,
+  lowStockThreshold: 10,
+  showDiscountBadge: true,
+  smartUpsellEnabled: true,
+  smartUpsellStrategy: "same_collection",
+  multiCurrencyEnabled: true,
 };
 
 describe("sanitizeSettingsForTier", () => {
@@ -36,6 +42,9 @@ describe("sanitizeSettingsForTier", () => {
       expect(result.showFreeShippingBar).toBe(false);
       expect(result.countdownEnabled).toBe(false);
       expect(result.trustBadgesEnabled).toBe(false);
+      expect(result.lowStockEnabled).toBe(false);
+      expect(result.showDiscountBadge).toBe(false);
+      expect(result.multiCurrencyEnabled).toBe(false);
     });
 
     it("disables all Premium features", () => {
@@ -43,6 +52,7 @@ describe("sanitizeSettingsForTier", () => {
       expect(result.enableQuantitySelector).toBe(false);
       expect(result.openCartDrawer).toBe(false);
       expect(result.analyticsEnabled).toBe(false);
+      expect(result.smartUpsellEnabled).toBe(false);
     });
 
     it("preserves core fields", () => {
@@ -65,6 +75,9 @@ describe("sanitizeSettingsForTier", () => {
       expect(result.showFreeShippingBar).toBe(true);
       expect(result.countdownEnabled).toBe(true);
       expect(result.trustBadgesEnabled).toBe(true);
+      expect(result.lowStockEnabled).toBe(true);
+      expect(result.showDiscountBadge).toBe(true);
+      expect(result.multiCurrencyEnabled).toBe(true);
     });
 
     it("disables Premium features", () => {
@@ -72,6 +85,7 @@ describe("sanitizeSettingsForTier", () => {
       expect(result.enableQuantitySelector).toBe(false);
       expect(result.openCartDrawer).toBe(false);
       expect(result.analyticsEnabled).toBe(false);
+      expect(result.smartUpsellEnabled).toBe(false);
     });
   });
 
@@ -87,6 +101,10 @@ describe("sanitizeSettingsForTier", () => {
       expect(result.countdownEnabled).toBe(true);
       expect(result.trustBadgesEnabled).toBe(true);
       expect(result.analyticsEnabled).toBe(true);
+      expect(result.lowStockEnabled).toBe(true);
+      expect(result.showDiscountBadge).toBe(true);
+      expect(result.smartUpsellEnabled).toBe(true);
+      expect(result.multiCurrencyEnabled).toBe(true);
     });
   });
 

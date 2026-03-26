@@ -22,6 +22,12 @@ const SETTINGS_FIELDS = [
   "trustBadgesList",
   "trustBadgesStyle",
   "analyticsEnabled",
+  "lowStockEnabled",
+  "lowStockThreshold",
+  "showDiscountBadge",
+  "smartUpsellEnabled",
+  "smartUpsellStrategy",
+  "multiCurrencyEnabled",
 ] as const satisfies readonly (keyof SettingsOutput)[];
 
 export function pickSettings(obj: Record<string, unknown>): SettingsOutput {

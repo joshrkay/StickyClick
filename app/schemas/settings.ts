@@ -55,6 +55,18 @@ export const SettingsSchema = z.object({
     .default("secure_checkout,money_back"),
   trustBadgesStyle: z.enum(["icon_only", "icon_text", "text_only"]),
   analyticsEnabled: z.string().transform((val) => val === "true"),
+  lowStockEnabled: z.string().transform((val) => val === "true"),
+  lowStockThreshold: z
+    .string()
+    .transform((val) => Math.max(1, Math.min(999, parseInt(val, 10) || 10))),
+  showDiscountBadge: z.string().transform((val) => val === "true"),
+  smartUpsellEnabled: z.string().transform((val) => val === "true"),
+  smartUpsellStrategy: z.enum([
+    "same_collection",
+    "best_selling",
+    "highest_price",
+  ]),
+  multiCurrencyEnabled: z.string().transform((val) => val === "true"),
 });
 
 export type SettingsOutput = z.output<typeof SettingsSchema>;

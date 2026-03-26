@@ -28,6 +28,24 @@ document.addEventListener('DOMContentLoaded', () => {
   const analyticsEnabled = String(stickyContainer.dataset.analyticsEnabled || '') === 'true';
   const shopDomain = stickyContainer.dataset.shopDomain || (window.Shopify && Shopify.shop) || window.location.hostname;
 
+  // Low stock urgency settings
+  const lowStockEnabled = String(stickyContainer.dataset.lowStockEnabled || '') === 'true';
+  const lowStockThreshold = Number(stickyContainer.dataset.lowStockThreshold) || 10;
+  const inventoryQty = Number(stickyContainer.dataset.inventoryQty);
+
+  // Discount badge settings
+  const showDiscountBadge = String(stickyContainer.dataset.showDiscountBadge || '') === 'true';
+
+  // Smart upsell settings
+  const smartUpsellEnabled = String(stickyContainer.dataset.smartUpsellEnabled || '') === 'true';
+
+  // Multi-currency settings
+  const multiCurrencyEnabled = String(stickyContainer.dataset.multiCurrencyEnabled || '') === 'true';
+  const currencyCode = stickyContainer.dataset.currencyCode || '';
+
+  // A/B test variant (set by proxy config fetch)
+  let abTestVariant = null;
+
   const upsellCheckbox = document.getElementById('sticky-upsell-checkbox');
   const qtyDecreaseBtn = document.getElementById('sticky-qty-decrease');
   const qtyIncreaseBtn = document.getElementById('sticky-qty-increase');
@@ -113,6 +131,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const items = [{ id: Number(mainVariantId), quantity: enableQuantitySelector ? quantity : 1 }];
     if (upsellEnabled && upsellVariantId && (!upsellCheckbox || upsellCheckbox.checked)) {
       items.push({ id: Number(upsellVariantId), quantity: 1 });
+    }
+
+    // Smart collection upsell items
+    if (smartUpsellEnabled) {
+      document.querySelectorAll('.sticky-smart-upsell-item').forEach(function (el) {
+        var checkbox = el.querySelector('.sticky-smart-upsell-check');
+        if (checkbox && checkbox.checked) {
+          var vid = String(el.dataset.variantId || '').replace(/\D/g, '');
+          if (vid) items.push({ id: Number(vid), quantity: 1 });
+        }
+      });
     }
 
     trackEvent('click', mainVariantId, 0, 0);
@@ -206,12 +235,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function formatMoney(cents, currencyCode) {
+  function formatMoney(cents, overrideCurrency) {
     const amount = Number(cents || 0) / 100;
     try {
+      const code = overrideCurrency
+        || (multiCurrencyEnabled && currencyCode)
+        || (window.Shopify && Shopify.currency && Shopify.currency.active)
+        || 'USD';
       return new Intl.NumberFormat(undefined, {
         style: 'currency',
-        currency: currencyCode || (window.Shopify && Shopify.currency && Shopify.currency.active) || 'USD',
+        currency: code,
       }).format(amount);
     } catch {
       return `$${amount.toFixed(2)}`;
@@ -242,6 +275,7 @@ document.addEventListener('DOMContentLoaded', () => {
         eventType: eventType,
         variantId: variantId ? String(variantId) : null,
         value: Number(priceInCents) || 0,
+        testVariant: abTestVariant || null,
       });
       if (navigator.sendBeacon) {
         navigator.sendBeacon('/apps/stickyclick/api/events', new Blob([payload], { type: 'application/json' }));
@@ -320,4 +354,77 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   refreshCartSummary();
+
+  // --- Feature: Automatic Discount Badge ---
+  if (showDiscountBadge) {
+    const discountBadgeEl = document.getElementById('sticky-discount-badge');
+    if (discountBadgeEl) {
+      fetchDiscounts();
+    }
+
+    async function fetchDiscounts() {
+      try {
+        const res = await fetch('/apps/stickyclick/api/discounts?shop=' + encodeURIComponent(shopDomain));
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.discounts && data.discounts.length > 0) {
+          const disc = data.discounts[0];
+          discountBadgeEl.textContent = disc.title || disc.summary || 'Discount Applied!';
+          discountBadgeEl.classList.remove('sticky-discount-hidden');
+        }
+      } catch (e) {
+        // Discount fetch is non-blocking
+      }
+    }
+  }
+
+  // --- Feature: Smart Collection Upsells ---
+  if (smartUpsellEnabled) {
+    const smartUpsellContainer = document.getElementById('sticky-smart-upsell');
+    if (smartUpsellContainer) {
+      const upsellItems = smartUpsellContainer.querySelectorAll('.sticky-smart-upsell-item');
+      // Only show up to 2 items to keep it compact
+      upsellItems.forEach((item, idx) => {
+        if (idx >= 2) item.style.display = 'none';
+      });
+    }
+  }
+
+  // --- Feature: A/B Test Config ---
+  async function fetchABTestConfig() {
+    try {
+      const res = await fetch('/apps/stickyclick/api/ab-config?shop=' + encodeURIComponent(shopDomain));
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.variant && data.config) {
+        abTestVariant = data.variant;
+        applyABTestConfig(data.config);
+      }
+    } catch (e) {
+      // A/B test fetch is non-blocking
+    }
+  }
+
+  function applyABTestConfig(config) {
+    if (config.primaryColor) {
+      stickyContainer.style.setProperty('--sticky-primary', config.primaryColor);
+    }
+    if (config.textColor) {
+      stickyContainer.style.setProperty('--sticky-text', config.textColor);
+    }
+    if (config.buttonText && stickyButton) {
+      const priceSpan = stickyButton.querySelector('.sticky-price');
+      const priceHtml = priceSpan ? priceSpan.outerHTML : '';
+      stickyButton.innerHTML = config.buttonText + priceHtml;
+    }
+    if (config.position) {
+      stickyContainer.dataset.position = config.position;
+    }
+  }
+
+  // Kick off A/B test config fetch
+  if (analyticsEnabled) {
+    fetchABTestConfig();
+  }
+
 });
