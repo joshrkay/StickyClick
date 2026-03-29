@@ -78,43 +78,35 @@ describe("apps.proxy.api.ab-config", () => {
     );
   });
 
-  it("returns a variant and config when a running test exists", async () => {
+  it("returns both variant configs when a running test exists", async () => {
     mockABTestFindFirst.mockResolvedValue(runningTest);
     const request = makeRequest("test.myshopify.com");
     const res = await loader({ request, params: {}, context: {} } as never);
     const json = await res.json();
 
-    expect(["A", "B"]).toContain(json.variant);
     expect(json.testId).toBe(42);
-    expect(json.config).toBeDefined();
-    expect(typeof json.config.primaryColor).toBe("string");
-    expect(typeof json.config.buttonText).toBe("string");
+    expect(json.variantAConfig).toEqual({ primaryColor: "#000000", buttonText: "Add to Cart" });
+    expect(json.variantBConfig).toEqual({ primaryColor: "#1d4ed8", buttonText: "Buy Now" });
   });
 
-  it("returns variant A config when variant is A", async () => {
+  it("returns variant A config correctly", async () => {
     mockABTestFindFirst.mockResolvedValue(runningTest);
-    vi.spyOn(Math, "random").mockReturnValue(0.1); // < 0.5 → A
 
     const request = makeRequest("test.myshopify.com");
     const res = await loader({ request, params: {}, context: {} } as never);
     const json = await res.json();
 
-    expect(json.variant).toBe("A");
-    expect(json.config).toEqual({ primaryColor: "#000000", buttonText: "Add to Cart" });
-    vi.restoreAllMocks();
+    expect(json.variantAConfig).toEqual({ primaryColor: "#000000", buttonText: "Add to Cart" });
   });
 
-  it("returns variant B config when variant is B", async () => {
+  it("returns variant B config correctly", async () => {
     mockABTestFindFirst.mockResolvedValue(runningTest);
-    vi.spyOn(Math, "random").mockReturnValue(0.9); // >= 0.5 → B
 
     const request = makeRequest("test.myshopify.com");
     const res = await loader({ request, params: {}, context: {} } as never);
     const json = await res.json();
 
-    expect(json.variant).toBe("B");
-    expect(json.config).toEqual({ primaryColor: "#1d4ed8", buttonText: "Buy Now" });
-    vi.restoreAllMocks();
+    expect(json.variantBConfig).toEqual({ primaryColor: "#1d4ed8", buttonText: "Buy Now" });
   });
 
   it("uses Cache-Control: no-store", async () => {
