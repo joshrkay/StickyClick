@@ -8,9 +8,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const upsellEnabled = String(stickyContainer.dataset.upsellEnabled || '') === 'true';
   const upsellVariantId = String(stickyContainer.dataset.upsellVariantId || '').replace(/\D/g, '');
   const quickBuyEnabled = String(stickyContainer.dataset.quickBuyEnabled || '') === 'true';
-  const showCartSummary = String(stickyContainer.dataset.showCartSummary || '') !== 'false';
-  const enableQuantitySelector = String(stickyContainer.dataset.enableQuantitySelector || '') !== 'false';
-  const openCartDrawerEnabled = String(stickyContainer.dataset.openCartDrawer || '') !== 'false';
+  const showCartSummary = String(stickyContainer.dataset.showCartSummary || '') === 'true';
+  const enableQuantitySelector = String(stickyContainer.dataset.enableQuantitySelector || '') === 'true';
+  const openCartDrawerEnabled = String(stickyContainer.dataset.openCartDrawer || '') === 'true';
 
   const showFreeShippingBar = String(stickyContainer.dataset.showFreeShippingBar || '') === 'true';
   const freeShippingGoal = Number(stickyContainer.dataset.freeShippingGoal) || 5000;
@@ -24,9 +24,25 @@ document.addEventListener('DOMContentLoaded', () => {
   const trustBadgesEnabled = String(stickyContainer.dataset.trustBadgesEnabled || '') === 'true';
   const trustBadgesStyle = stickyContainer.dataset.trustBadgesStyle || 'icon_text';
 
+  // Low stock settings
+  const lowStockEnabled = String(stickyContainer.dataset.lowStockEnabled || '') === 'true';
+
+  // Discount badge setting
+  const showDiscountBadge = String(stickyContainer.dataset.showDiscountBadge || '') === 'true';
+
+  // Smart upsell settings
+  const smartUpsellEnabled = String(stickyContainer.dataset.smartUpsellEnabled || '') === 'true';
+
+  // Multi-currency settings
+  const multiCurrencyEnabled = String(stickyContainer.dataset.multiCurrencyEnabled || '') === 'true';
+  const currencyCode = stickyContainer.dataset.currencyCode || '';
+
   // Analytics settings
   const analyticsEnabled = String(stickyContainer.dataset.analyticsEnabled || '') === 'true';
   const shopDomain = stickyContainer.dataset.shopDomain || (window.Shopify && Shopify.shop) || window.location.hostname;
+
+  // A/B test variant (assigned after fetching config)
+  let abTestVariant = null;
 
   // Translated strings from data attributes (set in Liquid)
   const tFreeShippingUnlocked = stickyContainer.dataset.tFreeShippingUnlocked || 'You unlocked Free Shipping!';
@@ -379,14 +395,25 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- Feature: A/B Test Config ---
+  function getOrAssignVariant(testId) {
+    const cookieName = 'sc_ab_' + testId;
+    const match = document.cookie.match(new RegExp('(?:^|; )' + cookieName + '=([AB])'));
+    if (match) return match[1];
+    const variant = Math.random() < 0.5 ? 'A' : 'B';
+    document.cookie = cookieName + '=' + variant + '; path=/; max-age=2592000; SameSite=Lax';
+    return variant;
+  }
+
   async function fetchABTestConfig() {
     try {
       const res = await fetch('/apps/stickyclick/api/ab-config?shop=' + encodeURIComponent(shopDomain));
       if (!res.ok) return;
       const data = await res.json();
-      if (data.variant && data.config) {
-        abTestVariant = data.variant;
-        applyABTestConfig(data.config);
+      if (data.testId && data.variantAConfig && data.variantBConfig) {
+        const variant = getOrAssignVariant(data.testId);
+        abTestVariant = variant;
+        const config = variant === 'A' ? data.variantAConfig : data.variantBConfig;
+        applyABTestConfig(config);
       }
     } catch (e) {
       // A/B test fetch is non-blocking
@@ -402,8 +429,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (config.buttonText && stickyButton) {
       const priceSpan = stickyButton.querySelector('.sticky-price');
-      const priceHtml = priceSpan ? priceSpan.outerHTML : '';
-      stickyButton.innerHTML = config.buttonText + priceHtml;
+      // Use textContent to prevent XSS from A/B test config values
+      stickyButton.textContent = '';
+      var textNode = document.createTextNode(config.buttonText);
+      stickyButton.appendChild(textNode);
+      if (priceSpan) stickyButton.appendChild(priceSpan);
     }
     if (config.position) {
       stickyContainer.dataset.position = config.position;

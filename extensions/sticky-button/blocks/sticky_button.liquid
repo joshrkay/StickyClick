@@ -17,11 +17,11 @@
     data-upsell-enabled="{{ settings.upsellEnabled | default: false }}"
     data-upsell-variant-id="{{ settings.upsellProductId | default: '' }}"
     data-quick-buy-enabled="{{ settings.quickBuyEnabled | default: false }}"
-    data-show-cart-summary="{{ settings.showCartSummary | default: true }}"
+    data-show-cart-summary="{{ settings.showCartSummary | default: false }}"
     data-show-free-shipping-bar="{{ settings.showFreeShippingBar | default: false }}"
     data-free-shipping-goal="{{ settings.freeShippingGoal | default: 5000 }}"
-    data-enable-quantity-selector="{{ settings.enableQuantitySelector | default: true }}"
-    data-open-cart-drawer="{{ settings.openCartDrawer | default: true }}"
+    data-enable-quantity-selector="{{ settings.enableQuantitySelector | default: false }}"
+    data-open-cart-drawer="{{ settings.openCartDrawer | default: false }}"
     data-position="{{ settings.position | default: 'BOTTOM_RIGHT' }}"
     data-countdown-enabled="{{ settings.countdownEnabled | default: false }}"
     data-countdown-end-time="{{ settings.countdownEndTime | default: '' }}"
@@ -125,14 +125,14 @@
           </label>
         {%- endif -%}
 
-        {%- if settings.showCartSummary != false -%}
+        {%- if settings.showCartSummary -%}
           <div class="sticky-click-meta" aria-live="polite">
             <span id="sticky-cart-count">{{ 'storefront.zeroItems' | t }}</span>
             <span id="sticky-cart-subtotal">$0.00</span>
           </div>
         {%- endif -%}
 
-        {%- if settings.enableQuantitySelector != false -%}
+        {%- if settings.enableQuantitySelector -%}
           <div class="sticky-qty-row" aria-label="{{ 'storefront.quantitySelector' | t }}">
             <button id="sticky-qty-decrease" class="sticky-qty-btn" type="button" aria-label="{{ 'storefront.decreaseQuantity' | t }}">−</button>
             <span id="sticky-qty-value" class="sticky-qty-value">1</span>
