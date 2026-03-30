@@ -396,10 +396,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- Feature: A/B Test Config ---
   function getOrAssignVariant(testId) {
-    var cookieName = 'sc_ab_' + testId;
-    var match = document.cookie.match(new RegExp('(?:^|; )' + cookieName + '=([AB])'));
+    const cookieName = 'sc_ab_' + testId;
+    const match = document.cookie.match(new RegExp('(?:^|; )' + cookieName + '=([AB])'));
     if (match) return match[1];
-    var variant = Math.random() < 0.5 ? 'A' : 'B';
+    const variant = Math.random() < 0.5 ? 'A' : 'B';
     document.cookie = cookieName + '=' + variant + '; path=/; max-age=2592000; SameSite=Lax';
     return variant;
   }
@@ -410,9 +410,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!res.ok) return;
       const data = await res.json();
       if (data.testId && data.variantAConfig && data.variantBConfig) {
-        var variant = getOrAssignVariant(data.testId);
+        const variant = getOrAssignVariant(data.testId);
         abTestVariant = variant;
-        var config = variant === 'A' ? data.variantAConfig : data.variantBConfig;
+        const config = variant === 'A' ? data.variantAConfig : data.variantBConfig;
         applyABTestConfig(config);
       }
     } catch (e) {

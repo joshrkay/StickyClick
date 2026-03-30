@@ -42,11 +42,6 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const addToCarts = counts.find((c) => c.eventType === "add_to_cart")?._count ?? 0;
   const revenueSum = counts.find((c) => c.eventType === "add_to_cart")?._sum?.value ?? 0;
 
-  const settings = await prisma.shopSettings.findUnique({
-    where: { shop: session.shop },
-    select: { multiCurrencyEnabled: true },
-  });
-
   // Fetch the shop's currency for display
   let currency = "USD";
   try {
@@ -54,8 +49,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     const shopRes = await admin.graphql(`#graphql { shop { currencyCode } }`);
     const shopJson = await shopRes.json();
     currency = shopJson.data?.shop?.currencyCode || "USD";
-  } catch {
-    // Fall back to USD
+  } catch (e) {
+    console.error("Failed to fetch shop currency, falling back to USD:", e);
   }
 
   return {

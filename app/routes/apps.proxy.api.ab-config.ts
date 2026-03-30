@@ -34,7 +34,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     try {
       variantAConfig = JSON.parse(activeTest.variantAConfig);
       variantBConfig = JSON.parse(activeTest.variantBConfig);
-    } catch {
+    } catch (e) {
+      console.error(`Failed to parse A/B test config for test ${activeTest.id}:`, e);
       return new Response(JSON.stringify({ variant: null, config: null }), {
         status: 200,
         headers: { "Content-Type": "application/json" },
