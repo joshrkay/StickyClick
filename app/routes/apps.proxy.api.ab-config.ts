@@ -27,15 +27,27 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       });
     }
 
-    // 50/50 split based on random assignment (cookie-based in storefront JS)
-    const variant = Math.random() < 0.5 ? "A" : "B";
-    const config =
-      variant === "A"
-        ? JSON.parse(activeTest.variantAConfig)
-        : JSON.parse(activeTest.variantBConfig);
+    // Return both variant configs so the client can choose based on its
+    // persisted cookie, ensuring a stable assignment across page loads.
+    let variantAConfig;
+    let variantBConfig;
+    try {
+      variantAConfig = JSON.parse(activeTest.variantAConfig);
+      variantBConfig = JSON.parse(activeTest.variantBConfig);
+    } catch (e) {
+      console.error(`Failed to parse A/B test config for test ${activeTest.id}:`, e);
+      return new Response(JSON.stringify({ variant: null, config: null }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
 
     return new Response(
-      JSON.stringify({ variant, testId: activeTest.id, config }),
+      JSON.stringify({
+        testId: activeTest.id,
+        variantAConfig,
+        variantBConfig,
+      }),
       {
         status: 200,
         headers: {
