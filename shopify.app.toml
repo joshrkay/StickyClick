@@ -19,6 +19,10 @@ api_version = "2026-01"
   topics = [ "app/scopes_update" ]
   uri = "/webhooks/app/scopes_update"
 
+  [[webhooks.subscriptions]]
+  compliance_topics = ["customers/data_request", "customers/redact", "shop/redact"]
+  uri = "/webhooks"
+
 [app_proxy]
 url = "https://sticky-click.vercel.app/apps/proxy"
 subpath = "stickyclick"
