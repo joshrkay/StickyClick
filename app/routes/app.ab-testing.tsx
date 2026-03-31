@@ -124,24 +124,36 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       return { status: "error", message: "Test name is required (max 100 chars)" };
     }
 
-    const hexColorRe = /^#[0-9A-Fa-f]{6}$/;
+    const hexColorRegex = /^#[0-9A-Fa-f]{6}$/;
     const validPositions = ["BOTTOM_RIGHT", "BOTTOM_LEFT"];
 
-    function sanitizeVariantConfig(prefix: string) {
+    const parseVariantConfig = (prefix: string) => {
       const color = String(formData.get(`${prefix}_primaryColor`) || "#000000");
       const text = String(formData.get(`${prefix}_textColor`) || "#FFFFFF");
-      const btn = String(formData.get(`${prefix}_buttonText`) || "Add to Cart").slice(0, 50);
+      const btnText = String(formData.get(`${prefix}_buttonText`) || "Add to Cart").slice(0, 50);
       const pos = String(formData.get(`${prefix}_position`) || "BOTTOM_RIGHT");
-      return {
-        primaryColor: hexColorRe.test(color) ? color : "#000000",
-        textColor: hexColorRe.test(text) ? text : "#FFFFFF",
-        buttonText: btn || "Add to Cart",
-        position: validPositions.includes(pos) ? pos : "BOTTOM_RIGHT",
-      };
-    }
 
-    const variantAConfig = JSON.stringify(sanitizeVariantConfig("variantA"));
-    const variantBConfig = JSON.stringify(sanitizeVariantConfig("variantB"));
+      if (!hexColorRegex.test(color) || !hexColorRegex.test(text)) {
+        return null;
+      }
+      if (!validPositions.includes(pos)) {
+        return null;
+      }
+
+      return JSON.stringify({
+        primaryColor: color,
+        textColor: text,
+        buttonText: btnText,
+        position: pos,
+      });
+    };
+
+    const variantAConfig = parseVariantConfig("variantA");
+    const variantBConfig = parseVariantConfig("variantB");
+
+    if (!variantAConfig || !variantBConfig) {
+      return { status: "error", message: "Invalid color format or position value" };
+    }
 
     await prisma.aBTest.create({
       data: {
@@ -159,6 +171,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   if (intent === "start") {
     const testId = Number(formData.get("testId"));
 
+    // Verify the test belongs to this shop
     const test = await prisma.aBTest.findFirst({
       where: { id: testId, shop: session.shop },
     });
@@ -183,6 +196,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   if (intent === "stop") {
     const testId = Number(formData.get("testId"));
 
+    // Verify the test belongs to this shop
     const test = await prisma.aBTest.findFirst({
       where: { id: testId, shop: session.shop },
     });

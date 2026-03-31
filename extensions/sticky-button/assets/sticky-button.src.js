@@ -406,15 +406,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function fetchABTestConfig() {
     try {
-      const res = await fetch('/apps/stickyclick/api/ab-config?shop=' + encodeURIComponent(shopDomain));
+      // Check localStorage for a persisted variant assignment
+      var storedVariant = '';
+      try {
+        var stored = JSON.parse(localStorage.getItem('stickyclick_ab_assignment') || 'null');
+        if (stored && stored.variant) storedVariant = stored.variant;
+      } catch (e) { /* localStorage may be unavailable */ }
+
+      var url = '/apps/stickyclick/api/ab-config?shop=' + encodeURIComponent(shopDomain);
+      if (storedVariant) url += '&v=' + encodeURIComponent(storedVariant);
+
+      var res = await fetch(url);
       if (!res.ok) return;
-      const data = await res.json();
-      if (data.testId && data.variantAConfig && data.variantBConfig) {
-        const variant = getOrAssignVariant(data.testId);
-        abTestVariant = variant;
-        const config = variant === 'A' ? data.variantAConfig : data.variantBConfig;
-        applyABTestConfig(config);
-      }
+      var data = await res.json();
+      if (!data.variant || !data.config) return;
+
+      // If stored test ID doesn't match, clear stale assignment
+      if (stored && stored.testId !== data.testId) storedVariant = '';
+
+      abTestVariant = data.variant;
+      try {
+        localStorage.setItem('stickyclick_ab_assignment', JSON.stringify({
+          testId: data.testId,
+          variant: data.variant,
+        }));
+      } catch (e) { /* localStorage may be unavailable */ }
+      applyABTestConfig(data.config);
     } catch (e) {
       // A/B test fetch is non-blocking
     }
@@ -429,11 +446,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (config.buttonText && stickyButton) {
       const priceSpan = stickyButton.querySelector('.sticky-price');
-      // Use textContent to prevent XSS from A/B test config values
-      stickyButton.textContent = '';
-      var textNode = document.createTextNode(config.buttonText);
-      stickyButton.appendChild(textNode);
-      if (priceSpan) stickyButton.appendChild(priceSpan);
+      // Clear existing text nodes safely, preserve the price span
+      while (stickyButton.firstChild && stickyButton.firstChild !== priceSpan) {
+        stickyButton.removeChild(stickyButton.firstChild);
+      }
+      stickyButton.insertBefore(document.createTextNode(config.buttonText), priceSpan);
     }
     if (config.position) {
       stickyContainer.dataset.position = config.position;
