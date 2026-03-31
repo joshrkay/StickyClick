@@ -5,7 +5,7 @@ const EventSchema = z.object({
   shop: z.string().min(1),
   eventType: z.enum(["impression", "click", "add_to_cart"]),
   variantId: z.string().nullable().optional(),
-  value: z.number().int().min(0).default(0),
+  value: z.number().int().min(0).max(99_999_999).default(0),
   testVariant: z.enum(["A", "B"]).nullable().optional(),
 });
 

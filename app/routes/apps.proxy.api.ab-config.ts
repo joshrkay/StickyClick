@@ -42,7 +42,11 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
         : JSON.parse(activeTest.variantBConfig);
 
     return new Response(
-      JSON.stringify({ variant, testId: activeTest.id, config }),
+      JSON.stringify({
+        testId: activeTest.id,
+        variantAConfig,
+        variantBConfig,
+      }),
       {
         status: 200,
         headers: {

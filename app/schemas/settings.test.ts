@@ -228,4 +228,98 @@ describe("SettingsSchema", () => {
       expect(result.success).toBe(false);
     });
   });
+
+  describe("MCP feature fields", () => {
+    describe("lowStockEnabled", () => {
+      it("transforms 'true' to boolean true", () => {
+        const result = SettingsSchema.parse({ ...validInput, lowStockEnabled: "true" });
+        expect(result.lowStockEnabled).toBe(true);
+      });
+
+      it("transforms 'false' to boolean false", () => {
+        const result = SettingsSchema.parse({ ...validInput, lowStockEnabled: "false" });
+        expect(result.lowStockEnabled).toBe(false);
+      });
+    });
+
+    describe("lowStockThreshold", () => {
+      it("parses string as integer", () => {
+        const result = SettingsSchema.parse({ ...validInput, lowStockThreshold: "5" });
+        expect(result.lowStockThreshold).toBe(5);
+      });
+
+      it("clamps to minimum of 1 for negative values", () => {
+        const result = SettingsSchema.parse({ ...validInput, lowStockThreshold: "-5" });
+        expect(result.lowStockThreshold).toBe(1);
+      });
+
+      it("clamps to maximum of 999", () => {
+        const result = SettingsSchema.parse({ ...validInput, lowStockThreshold: "1000" });
+        expect(result.lowStockThreshold).toBe(999);
+      });
+
+      it("defaults to 10 on invalid input", () => {
+        const result = SettingsSchema.parse({ ...validInput, lowStockThreshold: "abc" });
+        expect(result.lowStockThreshold).toBe(10);
+      });
+    });
+
+    describe("showDiscountBadge", () => {
+      it("transforms 'true' to boolean true", () => {
+        const result = SettingsSchema.parse({ ...validInput, showDiscountBadge: "true" });
+        expect(result.showDiscountBadge).toBe(true);
+      });
+
+      it("transforms 'false' to boolean false", () => {
+        const result = SettingsSchema.parse({ ...validInput, showDiscountBadge: "false" });
+        expect(result.showDiscountBadge).toBe(false);
+      });
+    });
+
+    describe("smartUpsellEnabled", () => {
+      it("transforms 'true' to boolean true", () => {
+        const result = SettingsSchema.parse({ ...validInput, smartUpsellEnabled: "true" });
+        expect(result.smartUpsellEnabled).toBe(true);
+      });
+
+      it("transforms 'false' to boolean false", () => {
+        const result = SettingsSchema.parse({ ...validInput, smartUpsellEnabled: "false" });
+        expect(result.smartUpsellEnabled).toBe(false);
+      });
+    });
+
+    describe("smartUpsellStrategy", () => {
+      it("accepts same_collection", () => {
+        const result = SettingsSchema.parse({ ...validInput, smartUpsellStrategy: "same_collection" });
+        expect(result.smartUpsellStrategy).toBe("same_collection");
+      });
+
+      it("accepts best_selling", () => {
+        const result = SettingsSchema.parse({ ...validInput, smartUpsellStrategy: "best_selling" });
+        expect(result.smartUpsellStrategy).toBe("best_selling");
+      });
+
+      it("accepts highest_price", () => {
+        const result = SettingsSchema.parse({ ...validInput, smartUpsellStrategy: "highest_price" });
+        expect(result.smartUpsellStrategy).toBe("highest_price");
+      });
+
+      it("rejects invalid strategy", () => {
+        const result = SettingsSchema.safeParse({ ...validInput, smartUpsellStrategy: "random" });
+        expect(result.success).toBe(false);
+      });
+    });
+
+    describe("multiCurrencyEnabled", () => {
+      it("transforms 'true' to boolean true", () => {
+        const result = SettingsSchema.parse({ ...validInput, multiCurrencyEnabled: "true" });
+        expect(result.multiCurrencyEnabled).toBe(true);
+      });
+
+      it("transforms 'false' to boolean false", () => {
+        const result = SettingsSchema.parse({ ...validInput, multiCurrencyEnabled: "false" });
+        expect(result.multiCurrencyEnabled).toBe(false);
+      });
+    });
+  });
 });

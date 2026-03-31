@@ -330,20 +330,20 @@ export default function Index() {
                       </>
                     )}
 
-                    <Select label="Low Stock Urgency Badge" name="lowStockEnabled" options={[{ label: "Disabled", value: "false" }, { label: "Enabled", value: "true" }]} value={form.lowStockEnabled} onChange={update("lowStockEnabled")} helpText="Show 'Only X left!' when inventory is low." disabled={!isProOrHigher} />
+                    <Select label={t("settings.lowStockBadge")} name="lowStockEnabled" options={[{ label: t("settings.disabled"), value: "false" }, { label: t("settings.enabled"), value: "true" }]} value={form.lowStockEnabled} onChange={update("lowStockEnabled")} helpText={t("settings.lowStockBadgeHelp")} disabled={!isProOrHigher} />
 
                     {form.lowStockEnabled === "true" && (
-                      <TextField label="Low Stock Threshold" name="lowStockThreshold" value={form.lowStockThreshold} onChange={update("lowStockThreshold")} autoComplete="off" helpText="Show badge when inventory is at or below this number." disabled={!isProOrHigher} />
+                      <TextField label={t("settings.lowStockThresholdLabel")} name="lowStockThreshold" value={form.lowStockThreshold} onChange={update("lowStockThreshold")} autoComplete="off" helpText={t("settings.lowStockThresholdHelp")} disabled={!isProOrHigher} />
                     )}
 
-                    <Select label="Auto Discount Badge" name="showDiscountBadge" options={[{ label: "Disabled", value: "false" }, { label: "Enabled", value: "true" }]} value={form.showDiscountBadge} onChange={update("showDiscountBadge")} helpText="Automatically show active discounts on the sticky button." disabled={!isProOrHigher} />
+                    <Select label={t("settings.discountBadge")} name="showDiscountBadge" options={[{ label: t("settings.disabled"), value: "false" }, { label: t("settings.enabled"), value: "true" }]} value={form.showDiscountBadge} onChange={update("showDiscountBadge")} helpText={t("settings.discountBadgeHelp")} disabled={!isProOrHigher} />
 
-                    <Select label="Multi-Currency (Markets)" name="multiCurrencyEnabled" options={[{ label: "Disabled", value: "false" }, { label: "Enabled", value: "true" }]} value={form.multiCurrencyEnabled} onChange={update("multiCurrencyEnabled")} helpText="Display prices in the customer's local currency via Shopify Markets." disabled={!isProOrHigher} />
+                    <Select label={t("settings.multiCurrency")} name="multiCurrencyEnabled" options={[{ label: t("settings.disabled"), value: "false" }, { label: t("settings.enabled"), value: "true" }]} value={form.multiCurrencyEnabled} onChange={update("multiCurrencyEnabled")} helpText={t("settings.multiCurrencyHelp")} disabled={!isProOrHigher} />
 
-                    <Select label="Smart Collection Upsells" name="smartUpsellEnabled" options={[{ label: "Disabled", value: "false" }, { label: "Enabled", value: "true" }]} value={form.smartUpsellEnabled} onChange={update("smartUpsellEnabled")} helpText="Auto-recommend products from the same collection (Premium)." disabled={!isPremium} />
+                    <Select label={t("settings.smartUpsell")} name="smartUpsellEnabled" options={[{ label: t("settings.disabled"), value: "false" }, { label: t("settings.enabled"), value: "true" }]} value={form.smartUpsellEnabled} onChange={update("smartUpsellEnabled")} helpText={t("settings.smartUpsellHelp")} disabled={!isPremium} />
 
                     {form.smartUpsellEnabled === "true" && (
-                      <Select label="Upsell Strategy" name="smartUpsellStrategy" options={[{ label: "Same Collection", value: "same_collection" }, { label: "Best Selling", value: "best_selling" }, { label: "Highest Price", value: "highest_price" }]} value={form.smartUpsellStrategy} onChange={update("smartUpsellStrategy")} disabled={!isPremium} />
+                      <Select label={t("settings.smartUpsellStrategy")} name="smartUpsellStrategy" options={[{ label: t("settings.smartUpsellSameCollection"), value: "same_collection" }, { label: t("settings.smartUpsellBestSelling"), value: "best_selling" }, { label: t("settings.smartUpsellHighestPrice"), value: "highest_price" }]} value={form.smartUpsellStrategy} onChange={update("smartUpsellStrategy")} disabled={!isPremium} />
                     )}
 
                     <Select label="Enable Quantity Selector" name="enableQuantitySelector" options={[{ label: "Enabled", value: "true" }, { label: "Disabled", value: "false" }]} value={form.enableQuantitySelector} onChange={update("enableQuantitySelector")} disabled={!isPremium} />

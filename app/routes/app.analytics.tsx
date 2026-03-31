@@ -42,8 +42,20 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const addToCarts = counts.find((c) => c.eventType === "add_to_cart")?._count ?? 0;
   const revenueSum = counts.find((c) => c.eventType === "add_to_cart")?._sum?.value ?? 0;
 
+  // Fetch the shop's currency for display
+  let currency = "USD";
+  try {
+    const { admin } = await authenticate.admin(request);
+    const shopRes = await admin.graphql(`#graphql { shop { currencyCode } }`);
+    const shopJson = await shopRes.json();
+    currency = shopJson.data?.shop?.currencyCode || "USD";
+  } catch (e) {
+    console.error("Failed to fetch shop currency, falling back to USD:", e);
+  }
+
   return {
     tier,
+    currency,
     stats: {
       impressions,
       clicks,
@@ -57,7 +69,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 };
 
 export default function Analytics() {
-  const { tier, stats } = useLoaderData<typeof loader>();
+  const { tier, stats, currency } = useLoaderData<typeof loader>();
   const [searchParams, setSearchParams] = useSearchParams();
   const days = searchParams.get("days") || "7";
   const { t } = useI18n();
@@ -108,7 +120,7 @@ export default function Analytics() {
                       [t("analytics.addToCarts"), String(stats.addToCarts)],
                       [t("analytics.ctr"), `${stats.ctr}%`],
                       [t("analytics.conversionRate"), `${stats.conversionRate}%`],
-                      [t("analytics.estimatedRevenue"), `$${stats.revenue}`],
+                      [t("analytics.estimatedRevenue"), new Intl.NumberFormat(undefined, { style: "currency", currency: currency || "USD" }).format(Number(stats.revenue))],
                     ]}
                   />
                 )}
