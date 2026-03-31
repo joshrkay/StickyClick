@@ -20,15 +20,15 @@ api_version = "2026-01"
   uri = "/webhooks/app/scopes_update"
 
   [[webhooks.subscriptions]]
-  topics = [ "customers/data_request" ]
+  compliance_topics = ["customers/data_request"]
   uri = "/webhooks/customers/data_request"
 
   [[webhooks.subscriptions]]
-  topics = [ "customers/redact" ]
+  compliance_topics = ["customers/redact"]
   uri = "/webhooks/customers/redact"
 
   [[webhooks.subscriptions]]
-  topics = [ "shop/redact" ]
+  compliance_topics = ["shop/redact"]
   uri = "/webhooks/shop/redact"
 
 [app_proxy]
@@ -38,7 +38,7 @@ prefix = "apps"
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "read_products,write_metafields,read_metafields,write_app_proxy,read_discounts"
+scopes = "read_products,write_app_proxy,read_discounts"
 
 [auth]
 redirect_urls = [

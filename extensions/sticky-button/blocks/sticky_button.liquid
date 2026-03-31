@@ -9,6 +9,8 @@
 {% endschema %}
 
 {%- assign settings = shop.metafields.stickyclick.settings.value -%}
+{%- assign _primary_color = settings.primaryColor | default: '#000000' -%}
+{%- assign _text_color = settings.textColor | default: '#FFFFFF' -%}
 {%- if settings.enabled and product -%}
   <div
     id="sticky-click-container"
@@ -50,10 +52,7 @@
     data-t-badge-fast-shipping="{{ 'storefront.badgeFastShipping' | t }}"
     data-t-badge-satisfaction="{{ 'storefront.badgeSatisfaction' | t }}"
     data-t-badge-ssl-encrypted="{{ 'storefront.badgeSslEncrypted' | t }}"
-    style="
-      --sticky-primary: {{ settings.primaryColor | default: '#000000' | remove: ';' | remove: '}' | remove: '{' | truncate: 7, '' }};
-      --sticky-text: {{ settings.textColor | default: '#FFFFFF' | remove: ';' | remove: '}' | remove: '{' | truncate: 7, '' }};
-    "
+    style="--sticky-primary: {{ _primary_color }}; --sticky-text: {{ _text_color }};"
   >
     <div class="sticky-click-wrapper">
       {%- if settings.showFreeShippingBar -%}
