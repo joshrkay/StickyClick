@@ -46,6 +46,7 @@ const shopify = shopifyApp({
     },
   },
   future: {
+    // Embedded auth + session-token strategy is default in @shopify/shopify-app-react-router@1.1.0.
     expiringOfflineAccessTokens: true,
   },
   ...(process.env.SHOP_CUSTOM_DOMAIN
