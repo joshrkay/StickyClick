@@ -7,16 +7,29 @@ import { useI18n } from "../../i18n";
 import styles from "./styles.module.css";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
+  const url = new URL(request.url);
+  const isEmbeddedRequest =
+    url.searchParams.get("embedded") === "1" ||
+    url.searchParams.has("host") ||
+    url.searchParams.has("id_token");
+
   try {
     await authenticate.admin(request);
+    throw redirect("/app");
   } catch (error) {
     if (error instanceof Response && [401, 403, 409, 410].includes(error.status)) {
-      return login(request);
+      if (isEmbeddedRequest || url.searchParams.has("shop")) {
+        const loginResult = await login(request);
+        if (loginResult instanceof Response) {
+          throw loginResult;
+        }
+      }
     }
+
     throw error;
   }
 
-  throw redirect("/app");
+  return { showForm: true };
 };
 
 export default function App() {
