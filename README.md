@@ -235,3 +235,26 @@ Shopify:
 Internationalization:
 
 - [Internationalizing your app](https://shopify.dev/docs/apps/best-practices/internationalization/getting-started)
+
+## Marketplace compliance checklist
+
+Use this checklist before every Marketplace submission or major auth/deploy change.
+
+- [ ] `shopify app config link` completes successfully in a writable/dev environment.
+- [ ] `shopify app deploy` completes successfully with no blocking validation errors.
+- [ ] `package.json` uses Shopify package versions that are mutually compatible for your app runtime:
+  - `@shopify/shopify-app-react-router`
+  - `@shopify/app-bridge-react`
+- [ ] `app/shopify.server.ts` uses embedded auth/session-token defaults expected by the current `@shopify/shopify-app-react-router` major version (Node adapter import, `shopifyApp(...)` server setup, `/auth` prefix, and embedded app distribution).
+- [ ] App reinstall on the dev store lands directly at `/app` in the embedded iframe without a manual login prompt.
+- [ ] Shopify Partner Dashboard automated checks are rerun and all required checks pass.
+
+### Final pass criteria
+
+Treat Marketplace compliance as **passed** only when all of the following are true in the same validation window:
+
+1. **CLI config/deploy pass**: both `shopify app config link` and `shopify app deploy` succeed without unresolved errors.
+2. **Dependency compatibility pass**: `@shopify/shopify-app-react-router` and `@shopify/app-bridge-react` are confirmed compatible (or upgraded together) and install cleanly.
+3. **Embedded auth pass**: reinstall flow opens the embedded app directly at `/app` and does not require manual merchant login.
+4. **Partner checks pass**: Shopify Partner Dashboard automated checks report no blocking failures.
+
