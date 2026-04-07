@@ -26,6 +26,11 @@ export default function Support() {
         <li>{t("support.issueCustomizing")}</li>
         <li>{t("support.issueBilling")}</li>
       </ul>
+      <h2>Theme extension onboarding</h2>
+      <p>
+        For step-by-step installation and Theme Editor setup guidance, see{" "}
+        <a href="/docs/theme-extension-onboarding.md">theme-extension-onboarding.md</a>.
+      </p>
       <p>{t("support.reachOut")}</p>
     </div>
   );
