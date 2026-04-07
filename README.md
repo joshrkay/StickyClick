@@ -135,6 +135,45 @@ When you reach the step for [setting up environment variables](https://shopify.d
 
 ## Gotchas / Troubleshooting
 
+### Shopify CLI error: multiple `shopify.web.toml` backend configs
+
+If `shopify app dev` shows:
+
+- `You can only have one "web" configuration file with the backend role in your app.`
+
+it means Shopify CLI found more than one backend web config in your project tree (commonly caused by cloning the repo into an already existing nested folder).
+
+#### Why this happens
+
+A typical conflict looks like:
+
+- `<repo-root>/shopify.web.toml`
+- `<repo-root>/<nested-copy>/shopify.web.toml`
+
+The second file usually appears when you accidentally run `git clone ...` inside an existing checkout, which creates a duplicate repo folder.
+
+#### Fix
+
+1. From repo root, check for duplicates:
+
+   ```bash
+   find . -name 'shopify.web.toml'
+   ```
+
+2. Keep only the `shopify.web.toml` that belongs to the real app root.
+3. Remove or move the nested duplicate directory (or at minimum its duplicate `shopify.web.toml`).
+4. Re-run:
+
+   ```bash
+   npm install
+   shopify app dev
+   ```
+
+#### Related terminal messages
+
+- `fatal: destination path ... already exists and is not an empty directory` means you tried to clone into a folder that already exists.
+- `npm WARN deprecated ...` messages are dependency notices and do not cause the Shopify backend-config conflict by themselves.
+
 ## StickyClick Theme Extension Onboarding (Merchant Flow)
 
 Use this exact flow to activate the StickyClick button in a merchant theme.
