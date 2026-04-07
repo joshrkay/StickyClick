@@ -143,6 +143,20 @@ When you're ready to set up your app in production, you can follow [our deployme
 
 When you reach the step for [setting up environment variables](https://shopify.dev/docs/apps/deployment/web#set-env-vars), you also need to set the variable `NODE_ENV=production`.
 
+### Required Vercel environment variables
+
+Set the following **required** environment variables in **Vercel → Project Settings → Environment Variables** for Production (and Preview when applicable):
+
+- `SHOPIFY_API_KEY`: Shopify app API key string from your Partner Dashboard (for example, `abc123def456`).
+- `SHOPIFY_API_SECRET`: Shopify app API secret string from your Partner Dashboard.
+- `SHOPIFY_APP_URL`: Fully-qualified HTTPS app URL (for example, `https://your-app.vercel.app`).
+- `SCOPES`: Comma-separated Shopify API scopes with no spaces (for example, `write_products,read_products`).
+- `DATABASE_URL`: Prisma-compatible database connection string (for example, `postgresql://USER:PASSWORD@HOST:5432/DB?schema=public`).
+
+Optional but commonly used:
+
+- `SHOP_CUSTOM_DOMAIN`: Custom shop domain for embedded app setups when needed.
+
 ## Gotchas / Troubleshooting
 
 ### Shopify CLI error: multiple `shopify.web.toml` backend configs
@@ -389,4 +403,3 @@ Treat Marketplace compliance as **passed** only when all of the following are tr
 2. **Dependency compatibility pass**: `@shopify/shopify-app-react-router` and `@shopify/app-bridge-react` are confirmed compatible (or upgraded together) and install cleanly.
 3. **Embedded auth pass**: reinstall flow opens the embedded app directly at `/app` and does not require manual merchant login.
 4. **Partner checks pass**: Shopify Partner Dashboard automated checks report no blocking failures.
-

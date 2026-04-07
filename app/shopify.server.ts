@@ -12,9 +12,29 @@ import prisma from "./db.server";
 export const PRO_PLAN = "Pro";
 export const PREMIUM_PLAN = "Premium";
 
-if (!process.env.SHOPIFY_API_SECRET) {
-  throw new Error("SHOPIFY_API_SECRET environment variable is required");
+function validateRequiredEnv() {
+  const requiredKeys = [
+    "SHOPIFY_API_KEY",
+    "SHOPIFY_API_SECRET",
+    "SHOPIFY_APP_URL",
+    "SCOPES",
+    "DATABASE_URL",
+  ] as const;
+
+  const missingKeys = requiredKeys.filter((key) => !process.env[key]?.trim());
+
+  if (missingKeys.length > 0) {
+    throw new Error(
+      [
+        "Missing required environment variables for Shopify app startup on Vercel.",
+        `Missing keys: ${missingKeys.join(", ")}`,
+        "Set these in your Vercel Project Settings > Environment Variables and redeploy.",
+      ].join(" "),
+    );
+  }
 }
+
+validateRequiredEnv();
 
 const shopify = shopifyApp({
   apiKey: process.env.SHOPIFY_API_KEY,
