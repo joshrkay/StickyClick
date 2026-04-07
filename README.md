@@ -6,6 +6,11 @@ Rather than cloning this repo, follow the [Quick Start steps](https://github.com
 
 Visit the [`shopify.dev` documentation](https://shopify.dev/docs/api/shopify-app-react-router) for more details on the React Router app package.
 
+## StickyClick Onboarding & Review Docs
+
+- Theme extension onboarding (reviewers + merchants): [docs/theme-extension-onboarding.md](docs/theme-extension-onboarding.md)
+- App listing review notes: [docs/app-listing-review-notes.md](docs/app-listing-review-notes.md)
+
 ## Upgrading from Remix
 
 If you have an existing Remix app that you want to upgrade to React Router, please follow the [upgrade guide](https://github.com/Shopify/shopify-app-template-react-router/wiki/Upgrading-from-Remix). Otherwise, please follow the quick start guide below.
