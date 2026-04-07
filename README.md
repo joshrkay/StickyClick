@@ -130,6 +130,84 @@ When you reach the step for [setting up environment variables](https://shopify.d
 
 ## Gotchas / Troubleshooting
 
+## StickyClick Theme Extension Onboarding (Merchant Flow)
+
+Use this exact flow to activate the StickyClick button in a merchant theme.
+
+### 1) Install the app from Shopify admin
+
+1. Open your dev/test store admin.
+2. Go to **Apps** and install this app (or reinstall if needed).
+3. Confirm the app is listed in **Apps** after installation.
+
+### 2) Open the Theme Editor
+
+1. In Shopify admin, go to **Online Store → Themes**.
+2. On your target theme, click **Customize**.
+
+### 3) Navigate to a product template
+
+1. In the top template selector, choose **Products**.
+2. Open a product template where the sticky button should render (for example, `Default product`).
+
+### 4) Add/enable the StickyClick app block
+
+1. In the left sidebar, click **Add block** in the product section where you want the sticky CTA behavior.
+2. Under **Apps**, select the StickyClick block provided by this extension:
+   - `extensions/sticky-button/blocks/sticky_button.liquid`
+3. Ensure the block toggle is enabled and any required settings are configured.
+
+### 5) Save theme changes
+
+1. Click **Save** in the theme editor.
+2. Wait for Shopify to confirm the save completed.
+
+### 6) Verify behavior on storefront
+
+1. Open the product page on the storefront (preview or live theme).
+2. Scroll the page and verify the sticky add-to-cart button appears and remains functional.
+3. Click the sticky button to confirm expected add-to-cart behavior.
+
+### 7) Troubleshooting
+
+If the sticky button does not appear, run through this checklist:
+
+1. **Block not visible in editor**
+   - Confirm the app is installed in the current store.
+   - Confirm you are editing a **product** template, not a collection/home template.
+   - In the block picker, check the **Apps** section for StickyClick.
+2. **App embed disabled**
+   - In the theme editor, open **App embeds** (toggle icon in left rail).
+   - Ensure StickyClick embed(s), if present, are enabled.
+   - Click **Save** again after enabling embeds.
+3. **Stale theme cache / preview state**
+   - Hard refresh the storefront preview (`Cmd/Ctrl + Shift + R`).
+   - Reopen the preview from **Online Store → Themes → ... → Preview**.
+   - If needed, duplicate the theme and test activation in the duplicate to rule out theme-specific drift.
+
+### 8) Screenshots / GIFs for reviewer clarity
+
+When submitting for review, include links or attachments for:
+
+1. Theme editor with the StickyClick app block selected.
+2. Saved confirmation state in the theme editor.
+3. Storefront product page with sticky button visible while scrolling.
+
+> Tip: a short GIF showing “Add block → Save → Storefront verification” significantly speeds up reviewer validation.
+
+## Reviewer notes (Shopify app review)
+
+To reproduce activation quickly in a dev store:
+
+1. Install the app on the dev store.
+2. Go to **Online Store → Themes → Customize**.
+3. Open any **product** template.
+4. Add the StickyClick app block from **Apps** (block source: `extensions/sticky-button/blocks/sticky_button.liquid`).
+5. Save.
+6. Open the storefront product page and scroll to verify the sticky add-to-cart button appears.
+
+If it is not immediately visible, enable any StickyClick **App embeds**, save, and hard refresh the storefront preview.
+
 ### Database tables don't exist
 
 If you get an error like:
